@@ -2,6 +2,29 @@
 """
 Annotate the */*/null_hyp_4.txt files with reads,
  and write copies with fewer columns.
+ 
+ Combine peak calling info and add reads-in-peaks/annotations.
+ ---
+ 
+ This will create combined_filtered/ and combined_unfiltered/ directories:
+ 
+ ```bash
+ python cliputil/filter.py -i individual_clip
+ # Outputs combined_unfiltered/.
+ # Annotate these peaks with seq, FBE and biotype.
+ python cliputil/annotate_peaks.py -i combined_unfiltered/
+ ```
+ 
+ This adds reads-in-peak numbers for both normalized and unnormalized numbers.
+ 
+ Filtering
+ ---
+ 
+ Filter by the hardcoded ratios:
+ ```bash
+ python cliputil/filter.py -f -i combined_unfiltered/
+ ```
+ 
 """
 from __init__ import *
 import add_reads_to_peaks
@@ -29,9 +52,11 @@ class peakSet(object):
     def write_tables(self, dirname):
         pass
 
-def mappings():
+def filename_and_label_mappings():
+    
     unfiltered = '/groups/Kimble/Common/fbf_celltype/combined_unfiltered/'
     filtered = '/groups/Kimble/Common/fbf_celltype/combined_filtered/'
+    
     fname_to_label = {
 '/groups/Kimble/Common/fbf_celltype/combined_unfiltered/old_fbf2.txt': 'old_fbf2',
 '/groups/Kimble/Common/fbf_celltype/combined_unfiltered/old_fbf1.txt': 'old_fbf1',
@@ -63,43 +88,58 @@ def mappings():
 #'/groups/Kimble/Common/fbf_celltype/individual_clip/spermatogenic/bak_fbf_sp/peaks/combined_fbf_sp/null_hyp_4.txt': 'bak_spermatogenic',
 #'/groups/Kimble/Common/fbf_celltype/individual_clip/spermatogenic/fbf_sp/peaks/combined_fbf_sp/null_hyp_4.txt': 'spermatogenic',
 }
+    
     label_to_unfiltered_output_file = dict([
-        (x, '{0}/{1}.txt'.format(unfiltered, x)) for x in \
-        fname_to_label.values()])
+        (x, '{0}/{1}.txt'.format(unfiltered, x)) for x in fname_to_label.values()])
+        
     label_to_filtered_output_file = dict([
-        (x, '{0}/{1}.txt'.format(filtered, x)) for x in \
-        fname_to_label.values()])
+        (x, '{0}/{1}.txt'.format(filtered, x)) for x in fname_to_label.values()])
+        
     for x in [unfiltered, filtered]:
-        if not os.path.exists(x): os.system('mkdir {0}'.format(x))
+        if not os.path.exists(x):
+            os.system('mkdir {0}'.format(x))
+    
     return unfiltered, filtered, fname_to_label, label_to_unfiltered_output_file, label_to_filtered_output_file
 
 
 def run(args):
+    
     (unfiltered, filtered, fname_to_label, label_to_unfiltered_output_file,
-     label_to_filtered_output_file) = mappings()
+     label_to_filtered_output_file) = filename_and_label_mappings()
+     
     peak_objs = add_reads_to_peaks.run(args)
+    
     # Clean.
     for _p in peak_objs:
+        
         _p.cut_columns(
             remove_those_with_patterns=[
                 '_cor$', '_rej$', '_poisson',
                 '_gene_norm$', '_mu$', 'pvalues',
                 '\Aexons$', '_nb$', '_std$', '\Alocal$',
                 'clip_local_norm', 'rna_seq_local_norm'])
+                
         _p.write_table('test.txt')
+        
         if os.path.realpath(_p.file) not in fname_to_label:
             print "{0} not in fname_to_label {1}.".format(_p.file, fname_to_label)
             continue
+        
         _p.label = fname_to_label[os.path.realpath(_p.file)]
+        
         print _p.file
         print os.path.realpath(_p.file)
         print " .____. "
         print _p.label
+        
         _p.write_table(label_to_unfiltered_output_file[_p.label])
+
     for _p in peak_objs:
+        
         if not hasattr(_p, 'label'):
             print "Skipping the generation of a filtered {0}, as it has no label attr".format(str(_p))
             continue
+        
         #filt_p = _p.get_filtered_obj(col='unnorm_ratio', cutoff=10)
         filt_p = _p.get_filtered_obj(col='ratio', cutoff=2)
         filt_p.write_table(label_to_filtered_output_file[_p.label])
@@ -107,40 +147,55 @@ def run(args):
 
 
 def read_dir(dirname):
+    
     print dirname
+    
     (unfiltered, filtered, fname_to_label, label_to_unfiltered_output_file,
-     label_to_filtered_output_file) = mappings()
+     label_to_filtered_output_file) = filename_and_label_mappings()
+     
     for f in glob.glob(dirname + '/*txt'):
         f = os.path.realpath(f)
+        
         if re.search('old_fbf1.txt', f):
             cutoff = 4
             unnorm_cutoff = 6
+        
         elif re.search('old_fbf2.txt', f):
             cutoff = 30
             unnorm_cutoff = 30
+        
         elif re.search('old_fbf1_to_fbf2_n2.txt', f):
             cutoff = 40
             unnorm_cutoff = 60
+        
         elif re.search('sp_both.txt', f):
             cutoff = 2#5
             unnorm_cutoff = 10#50
+        
         elif re.search('oo_both.txt', f):
             cutoff = 2#3
             unnorm_cutoff = 5#10
+        
         elif re.search('oo_fbf\d.txt', f):
             cutoff = 2
             unnorm_cutoff = 3
+        
         else:
             cutoff = 2#3
             unnorm_cutoff = 10#20
+        
         print f
         print cutoff, unnorm_cutoff
+        
         _p = peaks(file=f)
         _p.label = fname_to_label[os.path.realpath(_p.file)]
+        
         filtp = _p.get_filtered_obj(col='ratio', cutoff=cutoff)
+        
         if 'unnorm_ratio' in _p.data.columns:
             filtp = _p.get_filtered_obj(
                 col='unnorm_ratio', cutoff=unnorm_cutoff)
+        
         filtp.write_table(label_to_filtered_output_file[_p.label])
         
 if __name__ == '__main__':

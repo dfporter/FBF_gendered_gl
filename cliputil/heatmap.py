@@ -101,6 +101,13 @@ class heatmapMaker(vennMaker):
         def _log(x):
             if (x>=0.25): return np.log2(x)
             else: return -2
+        
+        def ceiling(x):
+            if x < 1E3:
+                return x
+            else:
+                return 1E3
+        
         for col in df.columns:
             if col == 'gene': continue
             df[col] = [_log(y) for y in df[col].tolist()]
@@ -162,7 +169,7 @@ class heatmapMaker(vennMaker):
         #self.counts_df['SP/OO FC'] = [self.gl_pkl.name_to_fc(x) for \
         #                             x in self.counts_df.index]
 
-    def load_counts_file(self, fname='combined_counts.txt'):
+    def load_counts_file(self, fname='combined_counts.txt', log_scale=True):
         self.counts_df = pandas.read_csv(
             fname, sep='\t', index_col=False)#.head(1000)
         # We only keep the LT FBF replicates, the combined SP/OO FBF
@@ -179,7 +186,8 @@ class heatmapMaker(vennMaker):
         self.counts_df = self.to_reads_per_mil(self.counts_df)
         self.shorten_names_and_subset_columns()
         self.counts_df = self.subtract_controls(self.counts_df)
-        self.counts_df = self.scale_columns(self.counts_df)
+        if log_scale:
+            self.counts_df = self.scale_columns(self.counts_df)
         self.rm_controls()
         self.rm_non_target_rnas(only_combined_datasets=True)
         return self.counts_df
@@ -196,7 +204,7 @@ class heatmapMaker(vennMaker):
             if (re.search('control', k)): continue
             for name in self.targs[k]:
                 all_targets[name] += 1
-            print k
+        #print k
         def is_targ(x):
             if (x in all_targets) and (all_targets[x] >= cutoff): return True
             else: return False
@@ -204,7 +212,7 @@ class heatmapMaker(vennMaker):
             is_targ(x) for x in self.counts_df.index]
         self.counts_df = self.counts_df[self.counts_df['keep']]
         del self.counts_df['keep']
-        print "Kept {0} targets".format(len(self.counts_df.index))
+        print("Kept {0} targets".format(len(self.counts_df.index)))
         self.cts = self.counts_df
         return self.cts
 
@@ -262,14 +270,11 @@ class heatmapMaker(vennMaker):
 
     def pairwise(self, df=None):
         if df is None: df = self.counts_df
-        #print df.corr()
         return df.corr()
 
 
 def get_cluster_classes(den, label='ivl'):
     cluster_idxs = defaultdict(list)
-   # print den['color_list']
-    #print den['icoord']
     for c, pi in zip(den['color_list'], den['icoord']):
         for leg in pi[1:3]:
             i = (leg - 5.0) / 10.0
@@ -345,7 +350,7 @@ def make_fig(df):
     cmap = sns.cubehelix_palette(
         len(df.index), light=.7, dark=.2, reverse=False,
         start=1, rot=-2, as_cmap=True)
-    cmap = plt.get_cmap('ocean_r')
+    cmap = plt.get_cmap('gray_r')#'ocean_r')
     plt.clf(); plt.close()
     df = df[['SP FBF_1', 'SP FBF_2', 'SP FBF_3',
              'OO FBF_1', 'OO FBF_2', 'OO FBF_3',
@@ -355,12 +360,12 @@ def make_fig(df):
     df.columns = [col_relabel_d[x] for x in df.columns]
     mat = df.as_matrix()
     #mat[abs(mat)<3e-10] = 0.001
-    mat = np.clip(mat, -2, 99, out=mat)
+    mat = np.clip(mat, -2, 1E6, out=mat)
 #    mat = 2**mat
     #sns.set(font_scale=2)
     #plt.subplots_adjust(bottom=2, top=3)
     fig = plt.figure()
-    print "Making gene by dataset heatmap (includes clustering)..."
+    print("Making gene by dataset heatmap (includes clustering)...")
     res = sns.clustermap(
          mat,
          #yticklabels=False,
@@ -371,7 +376,7 @@ def make_fig(df):
          method='average',
          col_cluster=False,
          )
-    print "Outputing heatmap figure..."
+    print("Outputing heatmap figure...")
     plt.setp(res.ax_heatmap.xaxis.get_majorticklabels(), rotation=90)
     plt.setp(res.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
     pos_labels = set(
@@ -384,7 +389,7 @@ def make_fig(df):
 #    print res.ax_heatmap.yaxis.get_majort
     res.ax_heatmap.yaxis.set_ticklabels(
         [label_if_positive(t._text) for t in \
-         res.ax_heatmap.yaxis.get_majorticklabels()])
+         res.ax_heatmap.yaxis.get_minorticklabels()])
     res.ax_heatmap.xaxis.set_ticklabels(
         [df.columns[int(t._text)] for t in \
          res.ax_heatmap.xaxis.get_majorticklabels()])
@@ -400,12 +405,12 @@ def make_fig(df):
     df = df[cols]
     ordered = df.copy()
     plt.xticks(rotation=90)
-    print res.__dict__
-    print res.ax_heatmap.__dict__['figure'].get_size_inches()
-    print res.ax_heatmap.__dict__.keys()
-    res.ax_heatmap.__dict__['figure'].set_figwidth(2.5)
-    res.ax_heatmap.__dict__['figure'].set_figheight(3)
-    print res.ax_heatmap.__dict__['figure'].get_size_inches()
+    #print res.__dict__
+    #print res.ax_heatmap.__dict__['figure'].get_size_inches()
+    #print res.ax_heatmap.__dict__.keys()
+    res.ax_heatmap.__dict__['figure'].set_figwidth(10)
+    res.ax_heatmap.__dict__['figure'].set_figheight(48)
+    #print res.ax_heatmap.__dict__['figure'].get_size_inches()
     plt.savefig('figs/Fig 3 Genes vs sample heatmap.pdf', #pad_inches=4,
                 )#bbox_inches='tight')
     plt.clf(); plt.close()
@@ -447,7 +452,7 @@ class tableMaker(object):
     
     def load_table(self):
         self.df = self.hm.counts_df
-        print "Loaded table into tableMaker object."
+        print("Loaded table into tableMaker object.")
         #print self.df.head(1)
         
     def define_groups(self, _dict):
@@ -458,7 +463,7 @@ class tableMaker(object):
     def ave_reads_per_gene_in_given_cols(self, df, col_list):
         ave_reads_per_gene = []
         for dataset_name in col_list:
-            ave_reads_per_gene.extend([2**x for x in df[dataset_name].tolist()])
+            ave_reads_per_gene.extend([x for x in df[dataset_name].tolist()])
         return sum(ave_reads_per_gene)/float(len(ave_reads_per_gene))
 
     def oo_vs_sp_reads_in_gene_as_lists(self, df):
@@ -468,10 +473,10 @@ class tableMaker(object):
         reads_per_gene_sp = []
         for dataset_name in oo_cols:
             reads_per_gene_oo.extend([
-                2**x for x in df[dataset_name].tolist()])
+                x for x in df[dataset_name].tolist()])
         for dataset_name in sp_cols:
             reads_per_gene_sp.extend([
-                2**x for x in df[dataset_name].tolist()])
+                x for x in df[dataset_name].tolist()])
         return reads_per_gene_oo, reads_per_gene_sp
 
 
@@ -498,8 +503,8 @@ class tableMaker(object):
         reads_per_gene_a = []
         reads_per_gene_b = []
         for dataset_name in col_list:
-            reads_per_gene_a.extend([2**x for x in df_a[dataset_name].tolist()])
-            reads_per_gene_b.extend([2**x for x in df_b[dataset_name].tolist()])
+            reads_per_gene_a.extend([x for x in df_a[dataset_name].tolist()])
+            reads_per_gene_b.extend([x for x in df_b[dataset_name].tolist()])
         res = scs.ttest_ind(reads_per_gene_a, reads_per_gene_b)
         return res.pvalue
     
@@ -510,10 +515,10 @@ class tableMaker(object):
         reads_per_gene_fbf2 = []
         for dataset_name in fbf1_cols:
             reads_per_gene_fbf1.extend([
-                2**x for x in df[dataset_name].tolist()])
+                x for x in df[dataset_name].tolist()])
         for dataset_name in fbf2_cols:
             reads_per_gene_fbf2.extend([
-                2**x for x in df[dataset_name].tolist()])
+                x for x in df[dataset_name].tolist()])
         return reads_per_gene_fbf1, reads_per_gene_fbf2
 
     def fbf1_vs_fbf2_reads_in_gene_means(self, df):
@@ -670,13 +675,13 @@ class tableMaker(object):
 #                'Mean reads/gene in spermatogenic CLIP'] = \
 #                self.ave_reads_per_gene_in_given_cols(
 #                this_block, ['SP FBF_1', 'SP FBF_2', 'SP FBF_3'])
-        for k, _dict in table.items():
-            print "***"
-            print k
+#for k, _dict in table.items():
+#            print "***"
+#            print k
             #for k, v in _dict.items():
             #    print k, v
         self.tabledf = pandas.DataFrame(table)
-        print self.tabledf
+        print(self.tabledf)
         self.tabledf.to_csv('tables/Table_1_block_stats.txt', sep='\t', index=False)
         writer = pandas.ExcelWriter('tables/Table 1 block stats.xls')
         self.tabledf.to_excel(writer)
@@ -715,9 +720,9 @@ class tableMaker(object):
 #label_to_fname = dict(zip(fname_to_label.values(), fname_to_label.keys()))
 
 if __name__ == '__main__':
-    print "Creating heatmapMaker() object()..."
+    print("Creating heatmapMaker() object()...")
     v = heatmapMaker()
-    print "Created heatmapMaker() object(). Loading peaks files..."
+    print("Created heatmapMaker() object(). Loading peaks files...")
     v.load(label_to_fname)  # Global from vennMaker used.
     plt.clf()
     plt.rc('font', size=1)

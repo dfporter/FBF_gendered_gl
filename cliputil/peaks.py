@@ -9,15 +9,17 @@ import numpy as np
 class peaks(object):
 
     def __init__(
-            self, data=None, name='unnamed peaks',
-            file=None):
+            self, data=None, name='unnamed peaks', file=None):
+        
         self.name = name
+        
         if data is None:
             if (file is not None):
                 self.data = pandas.read_csv(file, sep='\t', index_col=False)
             else: self.data = pandas.DataFrame()
         else:
             self.data = data  # The peaks dataframe.
+        
         self.file = file  # Path to peaks.txt file.
         self.bedgraph_filenames = {}
 

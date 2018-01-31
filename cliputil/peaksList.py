@@ -35,7 +35,7 @@ class peaksList(object):
         if 'chrom' in self.df.columns and 'chrm' not in self.df.columns:
             self.df['chrm'] = self.df['chrom']
         if 'exp_reads' in self.df.columns:
-            self.df.sort(columns='exp_reads', ascending=False, inplace=True)
+            self.df.sort_values(by='exp_reads', ascending=False, inplace=True)
 
     def to_csv(self, fname):
         self.df.to_csv(fname, sep='\t', index=False)

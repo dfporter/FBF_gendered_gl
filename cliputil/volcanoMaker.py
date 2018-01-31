@@ -9,7 +9,13 @@ import pandas
 import collections
 import numpy as np
 import matplotlib.pyplot as plt
-import cliputil
+try:
+    import cliputil
+    from cliputil import peaksList
+except:
+    import peaksList
+#os.path.append(os.path.abspath(__file__))
+
 import matplotlib
 import random
 
@@ -27,7 +33,7 @@ def id_to_gl_deseq_val(wbid, gl_deseq):
         return 0
 
 
-class volcanoMaker(cliputil.peaksList):
+class volcanoMaker(peaksList.peaksList):
 
     def __init__(self, dataframe=pandas.DataFrame(), name="Unnamed",
                  gene_name_col='gene_name'):
@@ -68,12 +74,12 @@ class volcanoMaker(cliputil.peaksList):
         def one_if_true(_):
             if _: return 1
             return 0
-        print "{0}/{1} genes in clipdf above {2} average raw counts.".format(
+        print("{0}/{1} genes in clipdf above {2} average raw counts.".format(
             sum([one_if_true(n) for n in above]), len(df.index), 
-            lower_cutoff_average)
+            lower_cutoff_average))
         self.clipdf = df[above].copy()
-        print "Input clipdf len: {0} output {1}".format(
-            in_len, len(self.clipdf.index))
+        print("Input clipdf len: {0} output {1}".format(
+            in_len, len(self.clipdf.index)))
     
     def translator(self):
         if os.path.exists('/opt/lib/name_wbid_map'): return True
@@ -135,7 +141,7 @@ class volcanoMaker(cliputil.peaksList):
                 f.write(l1r)
                 f.write(l2r)
                 f.write(outli)
-            print "Fixed header to %s" % l1r
+            print("Fixed header to %s" % l1r)
 
     def table_of_stats(self, outf='tables/volcano_stats.txt'):
         positive_control_genes = set("gld-1,htp-1,htp-2,mpk-1,him-3,fbf-1,lip-1,syp-2,fbf-2,fog-1,fem-3,syp-3,gld-3,fog-3,egl-4".split(','))
@@ -220,10 +226,10 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
                 name=k, d=positives[k]['Dataset'], sig=positives[k]['Sig dif in RNA-seq'],
                 lg=positives[k]['log2FoldChange'], pv=positives[k]['padj'],
                 pg=positives[k]['Program'])
-        print '--Begin stats table--'
+        print('--Begin stats table--')
         for k in st:
-            print "{}\t{}".format(k, st[k])
-        print '--End of stats table--'
+            print("{}\t{}".format(k, st[k]))
+        print('--End of stats table--')
 
     def id_to_color(self, x):
         if x not in self.program: return '#75968f'
@@ -289,7 +295,7 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
         output_name='figs/Fig 3A volcano blocks.pdf',
         reverse_x=False,
         ylim=(0, 50), xlim=(-7, 7)):
-        print '(((())))\n' * 7
+        print('(((())))\n' * 7)
         import blocks
         blocki = set(blocks.blocki)
         blockii = set(blocks.blockii)
@@ -353,7 +359,7 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
             elif (-1 < p < 1):
                 return max([0.005, float(abs(p))])
             else:
-                print p, '---',
+                print(p, '---',)
                 return 0.0
 #        max_x = float(max([abs(x[0]) for x in background]))
         def to_grey(p):
@@ -402,9 +408,9 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
         #fig.set_size_inches(3, 3)
         fig.set_figwidth(3)
         fig.set_figheight(3)
-        print '+++++'
-        print plt.rcParams["figure.figsize"]
-        print '---'
+        print('+++++')
+        print(plt.rcParams["figure.figsize"])
+        print('---')
         plt.savefig(output_name)
         pltclose()
 
@@ -471,7 +477,7 @@ def write_excel_of_deseq(df_in, header='SPvOO'):
             writer, sheet_name='All DESeq2 results', index=False)
         writer.save()
     else:
-        print "Failed to parse this header argument: {0}".format(header)
+        print("Failed to parse this header argument: {0}".format(header))
 
 
 def run():
