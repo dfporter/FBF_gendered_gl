@@ -1,4 +1,4 @@
-import cliputil
+
 import pandas
 import os
 import sys
@@ -7,16 +7,19 @@ import glob
 import re
 
 
+top_dir = '/groups/Kimble/Common/fbf_celltype/'  # Server.
+top_dir = '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/combined_filtered/'
+
 fname_to_label = {
-'/groups/Kimble/Common/fbf_celltype/combined_filtered/old_fbf2.txt': 'old_fbf2',
-'/groups/Kimble/Common/fbf_celltype/combined_filtered/old_fbf1.txt': 'old_fbf1',
-'/groups/Kimble/Common/fbf_celltype/combined_filtered/oo_both.txt': 'oo_both',
-'/groups/Kimble/Common/fbf_celltype/combined_filtered/oo_fbf1.txt': 'oo_fbf1',
-'/groups/Kimble/Common/fbf_celltype/combined_filtered/oo_fbf2.txt': 'oo_fbf2',
-'/groups/Kimble/Common/fbf_celltype/combined_filtered/sp_both.txt': 'sp_both',
-'/groups/Kimble/Common/fbf_celltype/combined_filtered/sp_fbf1.txt': 'sp_fbf1',
-'/groups/Kimble/Common/fbf_celltype/combined_filtered/sp_fbf2.txt': 'sp_fbf2',
-'/groups/Kimble/Common/fbf_celltype/combined_filtered/old_fbf1_to_fbf2_n2.txt': 'old_fbf1_to_fbf2_n2',
+top_dir + '/old_fbf2.txt': 'old_fbf2',
+top_dir + '/old_fbf1.txt': 'old_fbf1',
+top_dir + '/oo_both.txt': 'oo_both',
+top_dir + '/oo_fbf1.txt': 'oo_fbf1',
+top_dir + '/oo_fbf2.txt': 'oo_fbf2',
+top_dir + '/sp_both.txt': 'sp_both',
+top_dir + '/sp_fbf1.txt': 'sp_fbf1',
+top_dir + '/sp_fbf2.txt': 'sp_fbf2',
+top_dir + '/old_fbf1_to_fbf2_n2.txt': 'old_fbf1_to_fbf2_n2',
 }
 
 
@@ -45,44 +48,71 @@ class deseqMaker(object):
         self, indir='counts/', outdir='counts_alt_fnames/'):
         _mk(outdir)
         to_move = []
-        print "----"
+        print("----")
         for f in self.yield_sp_oo(indir):
             # Only individual replicates.
             if re.search('and', f): continue
             # Skip the tiny dataset
             if re.search('fbf1_oo_lane2_rt1', f): continue
-            print f, 
+            print(f, end=' ') 
             _f = re.sub('exp_fbf1_oo', 'oo-fbf1', f)
             _f = re.sub('exp_fbf2_oo', 'oo-fbf2', _f)
             _f = re.sub('exp_fbf1_sp', 'sp-fbf1', _f)
             _f = re.sub('exp_fbf2_sp', 'sp-fbf2', _f)
-            print ">" + _f
+            print(">" + _f)
             to_move.append((f, _f))
         self.cp_files(to_move, indir, outdir)
         
     def cp_files(self, to_move, indir, outdir):
-        print "Copying {} files from {} to {}".format(
-            len(to_move), indir, outdir)
+        print("Copying {} files from {} to {}".format(
+            len(to_move), indir, outdir))
         for f, _f in to_move:
             in_f = os.path.join(indir, f)
             out_f = os.path.join(outdir, _f)
-            print('cp {} {}'.format(in_f, out_f))
+            print(('cp {} {}'.format(in_f, out_f)))
             os.system('cp {} {}'.format(in_f, out_f))
 
     def mk_count_dir_for_deseq_of_sp_vs_oo_clip_6_reps(
         self, indir='counts/', outdir='counts_6_reps/'):
         _mk(outdir)
         to_move = []
-        print "----"
+        print("----")
         for f in self.yield_sp_oo(indir):
             # Only combined replicates.
             if not re.search('and', f): continue
-            print f
+            print(f)
             _f = re.sub('exp_fbf_oo_', 'oo-', f)
             _f = re.sub('exp_fbf_sp_', 'sp-', _f)
             to_move.append((f, _f))
         self.cp_files(to_move, indir, outdir)
-
+        
+    def mk_count_dir_for_deseq_of_sp_vs_oo_clip_6_reps_from_combined_counts_file(
+        self, infile='combined_counts.txt', outdir='counts_6_reps/'):
+        _mk(outdir)
+        to_move = []
+        
+        print("----")
+        df = pandas.read_csv(infile, sep='\t', index_col=False)
+        
+        out_cols = [x for x in df.columns if re.search('exp_fbf_sp.*', x) or re.search('exp_fbf_oo.*', x)]
+        df.index = df['gene']
+        #df = df[['gene'] + out_cols].copy()
+        print(df)
+        
+        if '_ambiguous' in df.index:
+            print('amb')
+            df.drop('_ambiguous', inplace=True)
+            df.drop('_no_feature', inplace=True)
+            
+        for col in out_cols:
+            to_out_df = df[['gene', col]]
+            
+            _f = re.sub('exp_fbf_oo_', 'oo-', col)
+            _f = re.sub('exp_fbf_sp_', 'sp-', _f)
+            
+            to_out_df[col] = [int(x) for x in to_out_df[col]]
+            to_out_df.to_csv(outdir + '/' + _f, sep='\t', index=False, header=False)
+        
     def mk_count_dir_for_deseq_of_lt_fbf1_vs_fbf2(
         self, indir='counts/', outdir='counts_lt_fbf/'):
         _mk(outdir)
@@ -94,7 +124,7 @@ class deseqMaker(object):
             'exp_fbf2_CGGA_counts.txt',
             'exp_fbf2_GGTT_counts.txt',
             'exp_fbf2_TGGC_counts.txt']:
-            print f
+            print(f)
             _f = re.sub('exp_fbf1_', 'fbf1-', f)
             _f = re.sub('exp_fbf2_', 'fbf2-', _f)
             to_move.append((f, _f))
@@ -111,7 +141,7 @@ class deseqMaker(object):
             'exp_fbf1_oo_lane2_rt1_counts.txt',
             'exp_fbf1_oo_lane2_rt6_counts.txt',
             'exp_fbf1_oo_lane2_rt9_counts.txt']:
-            print f
+            print(f)
             _f = re.sub('exp_fbf1_oo_', 'fbf1_ht-', f)
             _f = re.sub('exp_fbf1_', 'fbf1_lt-', _f)
             to_move.append((f, _f))
@@ -128,7 +158,7 @@ class deseqMaker(object):
             'exp_fbf_oo_rt11_and_6_counts.txt',
             'exp_fbf_oo_rt2_and_13_counts.txt',
             'exp_fbf_oo_rt9_and1_counts.txt']:
-            print f
+            print(f)
             _f = re.sub('exp_fbf_oo_', 'fbf1_ht-', f)
             _f = re.sub('exp_fbf1_', 'fbf1_lt-', _f)
             to_move.append((f, _f))
@@ -145,7 +175,7 @@ class deseqMaker(object):
             'exp_fbf_oo_rt11_and_6_counts.txt',
             'exp_fbf_oo_rt2_and_13_counts.txt',
             'exp_fbf_oo_rt9_and1_counts.txt']:
-            print f
+            print(f)
             _f = re.sub('exp_fbf_oo_', 'fbf1_ht-', f)
             _f = re.sub('exp_fbf2_', 'fbf2_lt-', _f)
             to_move.append((f, _f))
@@ -165,7 +195,7 @@ class deseqMaker(object):
             'exp_fbf_oo_rt11_and_6_counts.txt',
             'exp_fbf_oo_rt2_and_13_counts.txt',
             'exp_fbf_oo_rt9_and1_counts.txt']:
-            print f
+            print(f)
             _f = re.sub('exp_fbf_oo_', 'fbf_ht-', f)
             _f = re.sub('exp_fbf1_', 'fbf_lt-1', _f)
             _f = re.sub('exp_fbf2_', 'fbf_lt-2', _f)
@@ -174,18 +204,24 @@ class deseqMaker(object):
 
 if __name__ == '__main__':
     a = deseqMaker()
-    a.mk_count_dir_for_deseq_of_lt_fbf1_vs_ht_fbf1()
-    a.mk_count_dir_for_deseq_of_lt_fbf1_vs_ht_fbf()
-    a.mk_count_dir_for_deseq_of_lt_fbf2_vs_ht_fbf()
-    a.mk_count_dir_for_deseq_of_lt_fbf1_and_2_vs_ht_fbf()
-    a.mk_count_dir_for_deseq_of_lt_fbf1_vs_fbf2()
-    a.fix_count_filenames_for_deseq_of_sp_vs_oo_clip_11_reps(
-        indir='counts/', outdir='counts_11_reps/')
-    a.mk_count_dir_for_deseq_of_sp_vs_oo_clip_6_reps()
+    #a.mk_count_dir_for_deseq_of_lt_fbf1_vs_ht_fbf1()
+    #a.mk_count_dir_for_deseq_of_lt_fbf1_vs_ht_fbf()
+    #a.mk_count_dir_for_deseq_of_lt_fbf2_vs_ht_fbf()
+    #a.mk_count_dir_for_deseq_of_lt_fbf1_and_2_vs_ht_fbf()
+    #a.mk_count_dir_for_deseq_of_lt_fbf1_vs_fbf2()
+    #a.fix_count_filenames_for_deseq_of_sp_vs_oo_clip_11_reps(
+    #    indir='counts/', outdir='counts_11_reps/')
+    #a.mk_count_dir_for_deseq_of_sp_vs_oo_clip_6_reps()
+    a.mk_count_dir_for_deseq_of_sp_vs_oo_clip_6_reps_from_combined_counts_file()
 
-
+    
 rscript = """
+
 library(DESeq2)
+library("xlsx")
+
+# DESeq expects tab separated input files with no header, and genes in the left column.
+
 get_res = function(directory) {
         sf = grep('txt', list.files(directory), value=TRUE)
         sampleCondition = sub("(.*)-.*", "\\1", sf)
@@ -198,27 +234,34 @@ get_res = function(directory) {
         return(resO)
 }
 
-res_wt = get_res('counts/counts_lt_fbf1_vs_ht_fbf1/')
-write.table(res_wt, file='tables/lt_fbf1_vs_ht_fbf1_deseq.txt', quote=FALSE, sep='\t')
+#res_wt = get_res('counts/counts_lt_fbf1_vs_ht_fbf1/')
+#write.table(res_wt, file='tables/lt_fbf1_vs_ht_fbf1_deseq.txt', quote=FALSE, sep='\t')
 
-res_wt = get_res('counts/counts_lt_fbf2_vs_ht_fbf/')
-write.table(res_wt, file='tables/lt_fbf2_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
+#res_wt = get_res('counts/counts_lt_fbf2_vs_ht_fbf/')
+#write.table(res_wt, file='tables/lt_fbf2_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
 
-res_wt = get_res('counts/counts_lt_fbf1_vs_ht_fbf/')
-write.table(res_wt, file='tables/lt_fbf1_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
+#res_wt = get_res('counts/counts_lt_fbf1_vs_ht_fbf/')
+#write.table(res_wt, file='tables/lt_fbf1_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
 
-res_wt = get_res('counts/counts_lt_fbf1_and_2_vs_ht_fbf/')
-write.table(res_wt, file='tables/lt_fbf1_and_2_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
+#res_wt = get_res('counts/counts_lt_fbf1_and_2_vs_ht_fbf/')
+#write.table(res_wt, file='tables/lt_fbf1_and_2_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
 
 
-res_wt = get_res('counts_lt_fbf/')
-write.table(res_wt, file='tables/6_reps_lt_fbf1_vs_fbf2.txt', quote=FALSE, sep='\t')
-res_wt = get_res('counts_11_reps/')
-write.table(res_wt, file='tables/11_reps_sp_vs_oo.txt', quote=FALSE, sep='\t')
+#res_wt = get_res('counts_lt_fbf/')
+#write.table(res_wt, file='tables/6_reps_lt_fbf1_vs_fbf2.txt', quote=FALSE, sep='\t')
+
+#res_wt = get_res('counts_11_reps/')
+#write.table(res_wt, file='tables/11_reps_sp_vs_oo.txt', quote=FALSE, sep='\t')
+
 res_wt = get_res('counts_6_reps/')
 write.table(res_wt, file='tables/6_reps_sp_vs_oo.txt', quote=FALSE, sep='\t')
+write.table(res_wt, file='tables/File S4 Deseq2 SP vs OO.txt', quote=FALSE, sep='\t')
+write.xlsx(res_wt, "tables/File S4 Deseq2 SP vs OO.xlsx", sheetName = "Sheet1", 
+  col.names = TRUE, row.names = TRUE, append = FALSE)
+  
 
-res_wt = get_res('counts/')
-write.table(res_wt, file='tables/deseq_vs_noAb.txt', quote=FALSE, sep='\t')
+
+#res_wt = get_res('counts/')
+#write.table(res_wt, file='tables/deseq_vs_noAb.txt', quote=FALSE, sep='\t')
 
 """

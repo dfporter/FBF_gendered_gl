@@ -72,7 +72,7 @@ _mk('tables/')
 ########
 to_sheet = {
     'old_fbf1': 'Discard',
-    'old_fbf1_to_fbf2_n2': u'oo FBF-1 (20' + u'\xb0' + u')',
+    'old_fbf1_to_fbf2_n2': u'OO FBF-1 (20' + u'\xb0' + u'C)',
     'old_fbf2': u'OO FBF-2 (20' + u'\xb0' + u'C)',
     'oo_fbf1': u'OO FBF-1 (25' + u'\xb0' + u'C)',
     'oo_fbf2': u'OO FBF-2 (25' + u'\xb0' + u'C)',
@@ -97,7 +97,7 @@ for f in dfs:
 
     old_cols = [x for x in dfs[f].columns if x not in new_cols]
 
-    dfs[f] = dfs[f][new_cols + old_cols]
+    dfs[f] = dfs[f][new_cols + old_cols]  # Rearrange.
 
     out_sheet = dfs[f].copy()
 

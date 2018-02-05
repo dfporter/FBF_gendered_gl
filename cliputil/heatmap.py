@@ -368,7 +368,7 @@ def make_fig(df):
     print("Making gene by dataset heatmap (includes clustering)...")
     res = sns.clustermap(
          mat,
-         #yticklabels=False,
+         yticklabels=True,
          vmin=0,
          cmap=cmap,
          #metric='correlation',  # For columns
@@ -379,30 +379,58 @@ def make_fig(df):
     print("Outputing heatmap figure...")
     plt.setp(res.ax_heatmap.xaxis.get_majorticklabels(), rotation=90)
     plt.setp(res.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
+    
     pos_labels = set(
         ['gld-1','htp-1','htp-2','mpk-1','him-3','fbf-1','lip-1','syp-2',
          'fbf-2','fog-1','fem-3','syp-3','gld-3','fog-3','egl-4'])
+    
     def label_if_positive(t):
-        x = df.iloc[int(t)].name
-        if x in pos_labels: return x
-        else: return ''
-#    print res.ax_heatmap.yaxis.get_majort
+        #x = df.iloc[int(t)].name
+        #print(t)
+        if t in pos_labels:
+            return t
+        else:
+            return ''
+        
+
+    
+    # list_of_rows_in_same_order_as_in_heatmap:
+    rowlab = [df.iloc[i].name for i in res.dendrogram_row.reordered_ind]
+    
+    res.ax_heatmap.yaxis.set_ticklabels(rowlab)
+#        [df.columns[int(t._text)] for t in \
+#         res.ax_heatmap.xaxis.get_majorticklabels()])
+
+     
+    
+    #print([x for x in res.ax_heatmap.yaxis.get_majorticklabels()])
+    #print([x._text for x in res.ax_heatmap.yaxis.get_majorticklabels()])    
+    
+
+    new_labels = [label_if_positive(t._text) for t in res.ax_heatmap.yaxis.get_majorticklabels()]
+    print(new_labels)
     res.ax_heatmap.yaxis.set_ticklabels(
-        [label_if_positive(t._text) for t in \
-         res.ax_heatmap.yaxis.get_minorticklabels()])
+        new_labels)
+    
     res.ax_heatmap.xaxis.set_ticklabels(
         [df.columns[int(t._text)] for t in \
          res.ax_heatmap.xaxis.get_majorticklabels()])
+    
+    print('-----')
+
     #res.dendrogram_col.label = df.columns  # Labels diagram.
-    # list_of_rows_in_same_order_as_in_heatmap:
-    rowlab = [df.iloc[i].name for i in res.dendrogram_row.reordered_ind]
+    
+
     # col labels in same order as heatmap
     #ylab = [df.columns[i] for i in res.dendrogram_col.reordered_ind]
     #res.dendrogram_col.label = ylab
     #df = df[ylab]
+    
     cols = [t._text for t in res.ax_heatmap.xaxis.get_majorticklabels()]
-    df = df.loc[rowlab]
+    
+    df = df.loc[rowlab]  
     df = df[cols]
+    
     ordered = df.copy()
     plt.xticks(rotation=90)
     #print res.__dict__
@@ -416,11 +444,11 @@ def make_fig(df):
     plt.clf(); plt.close()
     relab_dict = recover_label()
     ordered.columns = [relab_dict[x] for x in ordered.columns]
-    writer = pandas.ExcelWriter('tables/Table S5 Complex frequencies.xls')
+    writer = pandas.ExcelWriter('tables/File S5 Complex frequencies.xls')
     ordered.to_excel(
-        writer, sheet_name='Reads-per-gene', index=True)
+        writer, sheet_name='log2 reads-per-gene', index=True)
     writer.save()
-    ordered.to_csv('tables/Table S5 heatmap.txt', sep='\t', encoding='utf-8')
+    ordered.to_csv('tables/File S5 heatmap.txt', sep='\t', encoding='utf-8')
     #cl = res.dendrogram_col.linkage
     #col_clusters = scipy.cluster.hierarchy.fcluster(cl, 1)
     #res.dendrogram_col.label = col_clusters
