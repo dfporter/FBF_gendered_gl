@@ -79,56 +79,58 @@ class complexTargetSet(targetSet.targetSet):
     def combine_targets_based_on_homology(self, translator):
         
         new_cgenes = [set([]) for x in range(len(self.cgenes))]
-      
-        #print('{0} len cgens ----->'.format(len(self.cgenes)))
-        #print(new_cgenes)
 
         for index1, genes1 in enumerate(list(self.cgenes)):
             transl1 = translator.translate(genes1, multiple_homologs_in_native_language_possible=False)
-            #print('-----> index1 {0} genes1 {1}'.format(index1, genes1))
-            #print(new_cgenes[:100])
-            
-            #print('Before processing index1: new_cgenes[index1 + 1 = {0}] = {1}'.format(index1 + 1, new_cgenes[index1 + 1]))
-            
-            #print('before |=, new_cgenes[index1 = {0}] = {1}'.format(index1, new_cgenes[index1]))
-            #print('type of new_cgenes=', type(new_cgenes))
-            new_cgenes[index1] = new_cgenes[index1] | set(genes1)
-            #print(new_cgenes[:100])
-            #print('after |=, new_cgenes[index1 = {0}] = {1}'.format(index1, new_cgenes[index1]))
-            
-            #print('After |= processing index1: new_cgenes[index1 + 1 = {0}] = {1}'.format(index1 + 1, new_cgenes[index1 + 1]))
-            #print('After |= processing index1: new_cgenes[index1 + 2 = {0}] = {1}'.format(index1 + 2, new_cgenes[index1 + 2]))
+
+            new_cgenes[index1] = new_cgenes[index1] | genes1
+
             if len(transl1) == 0:
                 continue
-                
-            
+
             for index2, genes2 in enumerate(list(self.cgenes)):
                 transl2 = translator.translate(genes2, multiple_homologs_in_native_language_possible=False)
                 
                 if transl1 & transl2:
-                    #print('transl1 {0} transl2 {1}'.format(transl1, transl2))
                     new_cgenes[index1] |= genes2
                     new_cgenes[index2] |= genes2 | genes1
-                    #print('{0}, {1} indexes together, len {2}'.format(index1, index2, len(new_cgenes[index1])))
-                    #print('new_cgenes[index1 = {0}] = {1}'.format(index1, new_cgenes[index1]))
-                    #print('new_cgenes[index2 = {0}] = {1}'.format(index2, new_cgenes[index2]))
-                    
-            #print('After processing index1: new_cgenes[index1 + 1 = {0}] = {1}'.format(index1 + 1, new_cgenes[index1 + 1]))
-            
-        print(str(new_cgenes)[:1000])
+
         print("Combining targets in language {0} based on overlapping translations {1}->{2}".format(
             self.language, translator.input_name, translator.output_name))
         
         print("Input is {0}  IDs (unflattened), {1} (flattened)".format(
             len(self.cgenes), len(set.union(*[set(x) for x in self.cgenes]))))
         
-        self.cgenes = set([frozenset(x) for x in new_cgenes])
+        # Denote a representative for each set.
+        # Make a lookup table to find the representative.
+        self.all_input_cgenes_to_representative = {}
+        reps = []
+        for _set in new_cgenes:
+            if type(_set) != type(set()):
+                print("???????")
+                input()
+                
+            if len(_set) > 1:
+                _list = list(_set)
+                rep = _list[0]
+
+                for item in _list:
+                    if item in reps:
+                        rep = item
+                        break
+
+                for item in _list:
+                    self.all_input_cgenes_to_representative[item] = rep
+                    
+            else:
+                rep = random.sample(_set, 1)[0]
+                self.all_input_cgenes_to_representative[rep] = rep
+                
+            reps.append(rep)
         
         # Reduce to one example gene.
-        self.cgenes = set([frozenset(random.sample(x, 1)) for x in self.cgenes])
+        self.cgenes = set([frozenset([x]) for x in reps if (len(x) > 0)])
         
-        hm = list(self.cgenes)[0]
-        print('hm len = {0}'.format(len(hm)))
         print("After collapse: {0}  IDs (unflattened), {1} (flattened)".format(
             len(self.cgenes), len(set.union(*[set(x) for x in self.cgenes]))))
         
@@ -175,37 +177,45 @@ all_b_target_ids in lang b (flattened): {12}, ex: "{13}"
         self.annotated_cgenes = collections.defaultdict(dict)
         table = collections.defaultdict(int)
         
+        _ = [set([x]) for x in self.all_input_cgenes_to_representative.keys()]
+        targs_including_non_representatives = set.union(*_)
+        
         # For each set of a_language_ids_with_translations (superset of targets).
         for frznset_lang_a, frznset_lang_b in list(translator.transl.items()):  
             
             targs_in_set = frznset_lang_a & all_a_targets_with_translations_in_language_a
-    
-            self.annotated_cgenes[frznset_lang_a]['translations'] = frznset_lang_b
-            self.annotated_cgenes[frznset_lang_a]['a_names'] = targs_in_set
             
-            if len(targs_in_set) > 0:
+            targs_including_non_representatives_in_set = set(frznset_lang_a & targs_including_non_representatives)
+            
+            # Annotate every cgene, including non_representatives.
+            for targ in targs_including_non_representatives_in_set:
+
+                self.annotated_cgenes[targ]['translations'] = frznset_lang_b
+                self.annotated_cgenes[targ]['a_names'] = targ    
                 
                 if len(frznset_lang_b & all_b_target_ids_in_lang_b) > 0:
-                    table['shared_targets'] += 1
-                    self.annotated_cgenes[frznset_lang_a]['a_target'] = 1
-                    self.annotated_cgenes[frznset_lang_a]['shared'] = 1
+                    self.annotated_cgenes[targ]['a_target'] = 1
+                    self.annotated_cgenes[targ]['shared'] = 1
                     
                 else:
+                    self.annotated_cgenes[targ]['a_target'] = 1
+                    self.annotated_cgenes[targ]['shared'] = 0   
+                    
+            # For the 2x2 table, only use representatives.
+            if len(targs_in_set) > 0:
+
+                if len(frznset_lang_b & all_b_target_ids_in_lang_b) > 0:
+                    table['shared_targets'] += 1            
+                else:
                     table['a_target_only'] += 1
-                    self.annotated_cgenes[frznset_lang_a]['a_target'] = 1
-                    self.annotated_cgenes[frznset_lang_a]['shared'] = 0
                     
             else:
                 
                 if len(frznset_lang_b & all_b_target_ids_in_lang_b) > 0:
                     table['b_target_only'] += 1
-                    self.annotated_cgenes[frznset_lang_a]['a_target'] = 0
-                    self.annotated_cgenes[frznset_lang_a]['shared'] = 0
-                    
                 else:
                     table['not_a_or_b_target'] += 1
-                    self.annotated_cgenes[frznset_lang_a]['a_target'] = 0
-                    self.annotated_cgenes[frznset_lang_a]['shared'] = 0
+
         
         print(table)
         self.fisher_table(table)
@@ -227,12 +237,24 @@ all_b_target_ids in lang b (flattened): {12}, ex: "{13}"
         self.fisher_table(n)'''
 
     def to_dataframe(self):
-        #ld = [self.annotated_cgenes[x] for x in self.annotated_cgenes]
-        df = pandas.DataFrame(list(self.annotated_cgenes.values()))
-        df['translations'] = [", ".join(x) for x in df.translations]
-        df['a_names'] = [", ".join(x) for x in df.a_names]
-        return df
         
+        def comma_sep(x):
+            if type(x) == type(''):
+                return x
+            elif type(x) == type(1):
+                return x
+            else:
+                return ', '.join(x)
+            
+        if hasattr(self, 'annotated_cgenes'):
+            #ld = [self.annotated_cgenes[x] for x in self.annotated_cgenes]
+            df = pandas.DataFrame(list(self.annotated_cgenes.values()))
+            df['translations'] = [comma_sep(x) for x in df.translations]
+            df['a_names'] = [comma_sep(x) for x in df.a_names]
+            return df
+
+        return pandas.DataFrame([list(self.cgenes.values())])
+    
     def fisher_table(self, n):
         table = [
             [n['not_a_or_b_target'], n['b_target_only']],

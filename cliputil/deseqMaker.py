@@ -202,6 +202,8 @@ class deseqMaker(object):
             to_move.append((f, _f))
         self.cp_files(to_move, indir, outdir)
 
+import sys
+
 if __name__ == '__main__':
     a = deseqMaker()
     #a.mk_count_dir_for_deseq_of_lt_fbf1_vs_ht_fbf1()
@@ -255,8 +257,8 @@ get_res = function(directory) {
 
 res_wt = get_res('counts_6_reps/')
 write.table(res_wt, file='tables/6_reps_sp_vs_oo.txt', quote=FALSE, sep='\t')
-write.table(res_wt, file='tables/File S4 Deseq2 SP vs OO.txt', quote=FALSE, sep='\t')
-write.xlsx(res_wt, "tables/File S4 Deseq2 SP vs OO.xlsx", sheetName = "Sheet1", 
+write.table(res_wt, file='tables/File S4 unedited Deseq2 SP vs OO.txt', quote=FALSE, sep='\t')
+write.xlsx(res_wt, "tables/File S4 raw DESeq2 output.xlsx", sheetName = "Sheet1", 
   col.names = TRUE, row.names = TRUE, append = FALSE)
   
 
