@@ -172,24 +172,30 @@ class heatmapMaker(vennMaker):
     def load_counts_file(self, fname='combined_counts.txt', log_scale=True):
         self.counts_df = pandas.read_csv(
             fname, sep='\t', index_col=False)#.head(1000)
+        
         # We only keep the LT FBF replicates, the combined SP/OO FBF
         # replicates, and the uncombined LT and HT controls for normalization.
-        to_del = [x for x in self.counts_df.columns if (\
-            self.name_is_one_of_11_ht_reps(x) 
+        to_del = [x for x in self.counts_df.columns if (self.name_is_one_of_11_ht_reps(x) )]
             #self.name_is_a_combined_ht_control(x) or \
             #self.name_is_a_combined_lt_control(x))
-                  )]
-        for x in to_del: del self.counts_df[x]
+                  
+        for x in to_del:
+            del self.counts_df[x]
+            
         is_rrna = [x for x in self.counts_df.gene if re.match('rrn-\d+.*', x)]
+        
         self.counts_df.set_index('gene', inplace=True)
         self.counts_df.drop(is_rrna, inplace=True)
         self.counts_df = self.to_reads_per_mil(self.counts_df)
         self.shorten_names_and_subset_columns()
         self.counts_df = self.subtract_controls(self.counts_df)
+        
         if log_scale:
             self.counts_df = self.scale_columns(self.counts_df)
+            
         self.rm_controls()
         self.rm_non_target_rnas(only_combined_datasets=True)
+        
         return self.counts_df
 
     def rm_non_target_rnas(self, cutoff=1, only_combined_datasets=False):
@@ -242,18 +248,27 @@ class heatmapMaker(vennMaker):
             n = re.sub('F1_i', 'LT FBF1', n)
             n = re.sub('F2_i', 'LT FBF2', n)
             return n  # 12 FBF + 12 controls
+        
         known = []
-        for i, x in enumerate(self.counts_df.columns):
-            if x == 'ave_neg':
+        for i, col in enumerate(self.counts_df.columns):
+            
+            print("\n\n\n\n\n\n\nInput column name: {0}".format(col))
+                  
+            if col == 'ave_neg':
                 known.append(x)
                 continue
+                
             rep = 1
-            name = clean(x) + '_' + str(rep)
+            name = clean(col) + '_' + str(rep)
+            
             while (name in known):
                 rep += 1
-                if rep > 9: break
+                if rep > 9:
+                    break
                 name = name[:-1] + str(rep)
+            print("----> {0}\n\n\n".format(name))
             known.append(name)
+            
         self.counts_df.columns = known
             
     def heatmap_counts_file(self, fname=None):
