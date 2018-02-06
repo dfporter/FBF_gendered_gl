@@ -19,7 +19,7 @@ Essentially, CLIP data constitutes:
 4. bed files
 
 The second type of input into this analysis is a variety of library files,
- ALL OF WHICH will be placed under /opt/lib/.
+ placed under /opt/lib/.
 
  The analysis files are:
 
@@ -88,13 +88,15 @@ python cliputil/score_metrics.py -c auto.ini -p combined_filtered/
 Supplementary tables
 ---
 
-# Needs documentation.
+Needs documentation.
 
 ```bash
-# Outputs tables/File S1 Peaks.xls
+# File S1 Peaks
 python cliputil/create_excel.py
-# When run with bed_files accessible, this also outputs File S2 Stats.
 
+# File S2 Stats.
+# (When run with bed_files accessible.)
+python cliputil/create_excel.py
 
 # File S3 GO terms:
 # ipynb for formating:
