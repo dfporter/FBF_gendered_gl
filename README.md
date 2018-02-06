@@ -1,36 +1,42 @@
 Comparing FBF iCLIP in differnt cell types
 ======
 
-Code for a paper on FBF in the gendered transcriptome. It's old enough to lack correct formating,
- and the code organization is poor.
+Code for a paper on FBF in the gendered transcriptome. 
+
+ Most of the code is old enough to lack good formating or organization.
 
 This analysis begins with the filtered, separately called oo/sp/20deg peaks
  files and associated wig files.
+
  It also includes library files of DESeq2 output - quite a few library files,
  in fact.
 
 Essentially, CLIP data constitutes:
-    1. Peaks files in combined_filtered/
-    2. bedgraphs, norm (per million reads)
-    3. bedgraphs, unnorm (raw read counts)
-    4. bed files
+
+1. Peaks files in combined_filtered/
+2. bedgraphs, norm (per million reads)
+3. bedgraphs, unnorm (raw read counts)
+4. bed files
 
 The second type of input into this analysis is a variety of library files,
  ALL OF WHICH will be placed under /opt/lib/.
+
  The analysis files are:
-     1. DESeq2 of sp/oo germlines
-     2. GL mitotic SAM.  # This was not included in the paper, and isn't used anymore.
+
+1. DESeq2 of sp/oo germlines
+2. GL mitotic SAM.  # This was not included in the paper, and isn't used anymore.
 
 CLIP datasets used:
-    1. 20 deg FBF-1
-    2. 20 deg FBF-2
-    3. Oo. FBF-1
-    4. Oo. FBF-2
-    5. Sp. FBF-1
-    6. Sp. FBF-2
-    7. Oo. FBF
-    8. Sp. FBF
-    9. 20 deg FBF
+
+1. 20 deg FBF-1
+2. 20 deg FBF-2
+3. Oo. FBF-1
+4. Oo. FBF-2
+5. Sp. FBF-1
+6. Sp. FBF-2
+7. Oo. FBF
+8. Sp. FBF
+9. 20 deg FBF
 
 
 
@@ -82,11 +88,31 @@ python cliputil/score_metrics.py -c auto.ini -p combined_filtered/
 Supplementary tables
 ---
 
-Outputs tables/Table S1 Peaks.xls
+# Needs documentation.
+
 ```bash
+# Outputs tables/File S1 Peaks.xls
 python cliputil/create_excel.py
+# When run with bed_files accessible, this also outputs File S2 Stats.
+
+
+# File S3 GO terms:
+# ipynb for formating:
+# cliputil/Convert IDs to WB ID for GO analysis on DAVID.ipynb
+
+# File S4
+python cliputil/deseqMaker.py
+# Then run the R script given at the bottom of the .py file.
+
+# File S5 Complex frequencies
+python cliputil/heatmap.py
+
+# File S6 Blocks
+# Selected from the appropriate range in File S5 by hand.
+
+# File S7 iPython notebook for conservation.
+# orthos/pum2_vs_fbf.ipynb
 ```
 
-This requires ./combined_filtered/*txt files, and ./mart_export.txt for 
-gene descriptions.
+
 
