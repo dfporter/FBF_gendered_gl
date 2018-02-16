@@ -362,10 +362,12 @@ def recover_label():
 
 
 def make_fig(df):
+    
     cmap = sns.cubehelix_palette(
         len(df.index), light=.7, dark=.2, reverse=False,
         start=1, rot=-2, as_cmap=True)
-    cmap = plt.get_cmap('gray_r')#'ocean_r')
+    cmap = plt.get_cmap('ocean_r')#('gray_r')#'ocean_r')
+    
     plt.clf(); plt.close()
     df = df[['SP FBF_1', 'SP FBF_2', 'SP FBF_3',
              'OO FBF_1', 'OO FBF_2', 'OO FBF_3',
@@ -451,8 +453,8 @@ def make_fig(df):
     #print res.__dict__
     #print res.ax_heatmap.__dict__['figure'].get_size_inches()
     #print res.ax_heatmap.__dict__.keys()
-    res.ax_heatmap.__dict__['figure'].set_figwidth(10)
-    res.ax_heatmap.__dict__['figure'].set_figheight(48)
+    res.ax_heatmap.__dict__['figure'].set_figwidth(7)
+    res.ax_heatmap.__dict__['figure'].set_figheight(10)
     #print res.ax_heatmap.__dict__['figure'].get_size_inches()
     plt.savefig('figs/Fig 3 Genes vs sample heatmap.pdf', #pad_inches=4,
                 )#bbox_inches='tight')

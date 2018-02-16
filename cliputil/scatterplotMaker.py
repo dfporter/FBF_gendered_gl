@@ -1,4 +1,4 @@
-from __future__ import division
+
 import argparse
 import sys
 import os
@@ -6,13 +6,14 @@ import pandas
 import collections
 import numpy as np
 import matplotlib.pyplot as plt
-import cliputil
+#import cliputil
 import scipy.stats as scs
 import scipy
 import matplotlib
 
-from volcanoMaker import  pltclose
 import volcanoMaker
+from volcanoMaker import  pltclose
+
 
 def id_to_gl_deseq_val(wbid, gl_deseq):
     if wbid not in gl_deseq:
@@ -24,12 +25,12 @@ def id_to_gl_deseq_val(wbid, gl_deseq):
     except:
         return 0
 
-class scatterplotMaker(cliputil.volcanoMaker):
+class scatterplotMaker(volcanoMaker.volcanoMaker):
 
     def scatterplot(
             self, clip_fname='tables/6_reps_sp_vs_oo.txt',
-            outfname='figs/Fig 3B Scatterplot.pdf'):
-        print clip_fname
+            outfname='figs/Fig 2C Scatterplot.pdf'):
+        print(clip_fname)
         # Set self.gl_deseq as dict of (name -> row of deseq info).
         self.gl_rnaseq()
         # Set self.df (as clip DESeq2 data).
@@ -37,7 +38,7 @@ class scatterplotMaker(cliputil.volcanoMaker):
         # Set self.program (dict by wbid) and adds Program column to self.df.
         self.read_sp_vs_oo_as_programs()
         # Now the figure.
-        print str(self.gl_deseq)[:1000]
+        print(str(self.gl_deseq)[:1000])
         clip_deseq = self.df[self.df['has_ortiz']]
         #clip_deseq = clip_deseq[clip_deseq['baseMean']>=50]
         gl_deseq_vals = [id_to_gl_deseq_val(x, self.gl_deseq) \
@@ -47,43 +48,58 @@ class scatterplotMaker(cliputil.volcanoMaker):
         _y = clip_deseq['log2FoldChange'].tolist()
         pltclose()
         fig = plt.figure()
-        plt.scatter(
+        ax = fig.add_subplot(111)
+        
+        ax.scatter(
             gl_deseq_vals, _y, linewidth=0,
-            color=cs, alpha=0.2)
+            color=cs, alpha=0.2, s=5)
         #plt.plot([-20, 20], [-21, 19], 'r--')
         #plt.plot([-20, 20], [-19, 21], 'r--')
         plt.plot([-20, 20], [-20, 20], 'k--', alpha=0.2)
         plt.plot([-20, 20], [0, 0], 'k:', alpha=0.5)
+        
         plt.ylim([-10, 15])
         plt.xlim([-10,15])
         plt.axes().set_aspect(1./plt.axes().get_data_ratio())
         #plt.axhline(y=0, linestyle='--', c='k', alpha=0.5)
+        
         plt.ylabel('FBF spermatogenic/oogenic (log2)', fontsize=10)
         plt.xlabel('RNA-seq spermatogenic/oogenic (log2)', fontsize=10)
+        
         plt.tick_params(axis='both', which='major', labelsize=6)
         plt.tick_params(axis='both', which='minor', labelsize=6)
+        
         fig.set_figheight(3)
         fig.set_figwidth(3)
+        
         plt.savefig(outfname, format='pdf')
         pltclose()
+        
+        
         pear_r, _ = scs.pearsonr(gl_deseq_vals, _y)
         spear_r, _ = scs.spearmanr(gl_deseq_vals, _y)
-        print "Correlation between CLIP and RNA abundance:"
-        print "\tPearson R {0}\n\tSpearman rho {1}".format(
-            pear_r, spear_r)
+        
+        print("Correlation between CLIP and RNA abundance:")
+        print("\tPearson R {0}\n\tSpearman rho {1}".format(
+            pear_r, spear_r))
+        
         sig = clip_deseq[clip_deseq['padj']<0.05].copy()
         sp = sig[sig['log2FoldChange']>1].copy()
         oo = sig[sig['log2FoldChange']<-1].copy()
-        print sig['Program'].value_counts()
+        
+        print(sig['Program'].value_counts())
+        
         def pr_vc(vc, label='value counts'):
             vc = dict(vc['Program'].value_counts())
             total = sum(vc.values())
-            print label
-            for k in vc: print '{0}: {1} ({2:.2f}%)'.format(
-                k, vc[k], 100* vc[k]/total)
+            print(label)
+            for k in vc: print('{0}: {1} ({2:.2f}%)'.format(
+                k, vc[k], 100* vc[k]/total))
+                
         pr_vc(sig, label='genes < 0.05 p value')
         pr_vc(sp, label='sp')
         pr_vc(oo, label='oo')
+        
         return
 
     
@@ -98,7 +114,7 @@ class scatterplotMaker(cliputil.volcanoMaker):
         sp_deseq = clip_deseq[clip_deseq['Program']!='Oogenic only'].copy()
         both_deseq = clip_deseq[clip_deseq['Program']=='Oogenic and Spermatogenic'].copy()
         def dist_to_diagonal(df):
-            tups = zip(df['log2FoldChange'].tolist(), df['gl_deseq'].tolist())
+            tups = list(zip(df['log2FoldChange'].tolist(), df['gl_deseq'].tolist()))
             return [(a - b) for a, b in tups]
         f, ax = plt.subplots(3, 2, figsize=(8, 12))
         # Oo.
@@ -134,8 +150,8 @@ class scatterplotMaker(cliputil.volcanoMaker):
             )
         ax[1][1].axhline(y=0, linestyle='--', c='k', alpha=1)
         # Both.
-        t = zip(both_deseq['RPKM in Sp. GL'].tolist(),
-                both_deseq['RPKM in Oo. GL'].tolist())
+        t = list(zip(both_deseq['RPKM in Sp. GL'].tolist(),
+                both_deseq['RPKM in Oo. GL'].tolist()))
         ax[2][0].hexbin(
             [np.mean([a, b]) for a,b in t],
             dist_to_diagonal(both_deseq),

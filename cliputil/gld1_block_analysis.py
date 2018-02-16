@@ -1,13 +1,13 @@
-from __future__ import division
+
 import scipy.stats as scs
-from peaksList import *
+from .peaksList import *
 from collections import defaultdict
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
-from volcanoMaker import *
+from .volcanoMaker import *
 table = """gld-1
 larp-1
 ppw-2
@@ -56,9 +56,9 @@ kin-19
 sip-1
 prg-1
 smk-1""".split('\n')
-from block_iii import blockiii
+from .block_iii import blockiii
 #iib = blockiii
-print iib
+print(iib)
 def sort_drop_dups(_df):
     _df.sort(columns=['exp_reads'], ascending=False, inplace=True)
     _df.drop_duplicates(subset='gene_name', inplace=True)
@@ -67,20 +67,20 @@ def sort_drop_dups(_df):
 def compare_temp_changes_vs_abundance(v):
     ortiz_df = pandas.read_csv(
         '/opt/lib/ortiz/DESeq_genes_in_gonad.txt', sep='\t')
-    print v.df.columns
+    print(v.df.columns)
 #    v.df['keep'] = [(x in iib) for x in v.df['gene_name'].tolist()]
     #tups = zip(#v.df['gene_name'].tolist(),
 #    v.df = v.df[v.df['baseMean']>=50]
-    print "len iib {0} len found {1}. missing: {2}".format(
+    print("len iib {0} len found {1}. missing: {2}".format(
         len(iib), len(v.df.gene_name),
-        set(iib) - set(v.df.gene_name))
+        set(iib) - set(v.df.gene_name)))
     def get_xy_df(xyz, name_set):
-        print str(xyz)[:100]
+        print(str(xyz)[:100])
         sublist = [
             (name, x, y, z) for (name, x, y, z) in xyz if name in name_set]
         df = pandas.DataFrame(sublist, columns=['gene_name', 'x', 'y', 'padj'])
-        print df[df['gene_name']=='larp-1']
-        print '---'
+        print(df[df['gene_name']=='larp-1'])
+        print('---')
         df['x'] = [np.log10(_x) for _x in df.x]
         df = df.replace([np.inf, -np.inf], np.nan)
         df.dropna(inplace=True)
@@ -88,29 +88,29 @@ def compare_temp_changes_vs_abundance(v):
         abundances = _x[np.isfinite(_x)]
         return df, abundances
     names = v.df['gene_name'].tolist()
-    print v.df.head()
+    print(v.df.head())
 #    print names
     x = [v.name_to_oo_rpkm(name) for name in v.df.gene_name]
     y = v.df['log2FoldChange'].tolist()
     z = v.df['padj'].tolist()
-    xyz = zip(names, x, y, z)
+    xyz = list(zip(names, x, y, z))
     name_set = set(v.df['gene_name'].tolist())
     df,  abundances_all = get_xy_df(xyz, name_set)
     ii, abundances_ii = get_xy_df(xyz, set(iib))
-    print "all genes abundances median {0} block abundances median {1}".format(
+    print("all genes abundances median {0} block abundances median {1}".format(
         np.median([10**x for x in abundances_all]),
-        np.median([10**x for x in abundances_ii]))
-    print "all genes sp/oo median {0} block sp/oo median {1}".format(
+        np.median([10**x for x in abundances_ii])))
+    print("all genes sp/oo median {0} block sp/oo median {1}".format(
         np.median([2**a for a in df['y'].tolist()]),
-        np.median([2**a for a in ii['y'].tolist()]))
+        np.median([2**a for a in ii['y'].tolist()])))
 
     oo_df = pandas.read_csv('combined_filtered/oo_both.txt', sep='\t')
     oo_df = sort_drop_dups(oo_df)
     oo_df['keep'] = [(n in set(iib)) for n in oo_df.gene_name]
     ii_peaks = oo_df[oo_df['keep']].copy()
     ii_peaks.to_csv('tables/ii_peaks.txt', sep='\t')
-    print "ii not in targs: {0}".format(set(iib) - set(
-        oo_df.gene_name))
+    print("ii not in targs: {0}".format(set(iib) - set(
+        oo_df.gene_name)))
     sp_df = pandas.read_csv('combined_filtered/sp_both.txt', sep='\t')
     sp_df = sort_drop_dups(sp_df)
     #print oo_df[oo_df['gene_name']=='larp-1']
