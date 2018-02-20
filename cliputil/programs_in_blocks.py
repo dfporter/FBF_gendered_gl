@@ -1,12 +1,8 @@
 
-import sys
-import os
-import pandas
-import collections
+import sys, os, pandas, collections
 import numpy as np
 import matplotlib.pyplot as plt
 
-import matplotlib
 import random
 import volcanoMaker
 
@@ -22,7 +18,7 @@ print("I {i} II {ii} III {iii}".format(
 p = volcanoMaker.volcanoMaker()
 p.read_clip_deseq_csv('tables/6_reps_sp_vs_oo.txt')
 p.read_programs()
-df = p.df[p.df['has_ortiz']].copy()
+df = p.clipdf[p.clipdf['has_ortiz']].copy()
 
 
 def as_p(x, y):
@@ -41,11 +37,14 @@ block_iii_df = df[[(name in blockiii) for name in df.gene_name]].copy()
 
 def row(_df, name):
     n = len(_df.index)
-    d = {'Total genes': len(_df.index),
-            'Oogenic only': as_p(_df[_df['Program']=='Oogenic only'], n),
-'Spermatogenic only': as_p(_df[_df['Program']=='Spermatogenic only'], n),
-'Oogenic and Spermatogenic': as_p(
-    _df[_df['Program']=='Oogenic and Spermatogenic'], n),}
+    
+    d = {
+        'Total genes': len(_df.index),
+        'Oogenic only': as_p(_df[_df['Program']=='Oogenic only'], n),
+        'Spermatogenic only': as_p(_df[_df['Program']=='Spermatogenic only'], n),
+        'Oogenic and Spermatogenic': as_p(
+            _df[_df['Program']=='Oogenic and Spermatogenic'], n),}
+    
     print(("""{name} (n={n})
 \t{oo}\t{oo_n}
 \t{sp}\t{sp_n}

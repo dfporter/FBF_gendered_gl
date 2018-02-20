@@ -2,20 +2,14 @@
 #from bokeh.plotting import ColumnDataSource, figure, show, output_file
 #import bokeh
 
-import argparse
-import sys
-import os
-import pandas
-import collections
+import os, sys, glob, pandas, collections, random, matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import peaksList
-#os.path.append(os.path.abspath(__file__))
 
-import matplotlib
-import random
+import scipy.stats as scs
 
-from blocks import blocki,blockii, blockiii
+from blocks import blocki, blockii, blockiii
 #from cliputil import *
 
 
@@ -46,35 +40,41 @@ class volcanoMaker(peaksList.peaksList):
             df.gene_id, df.gene_name)))
     
     def read_counts_files(self, dirname='counts_6_reps/'):
+        
         self.counts = {}
-        combined = collections.defaultdict(int)
-        import glob
-        import os
+        self.combined_counts = collections.defaultdict(int)
+
         for fname in glob.glob(dirname + '/*'):
             name = os.path.basename(fname)
             df = pandas.read_csv(fname, sep='\t', header=None, index_col=False)
-            self.counts[name] = dict(list(zip(df[0].tolist(),
-                                        df[1].tolist())))
+            
+            self.counts[name] = dict(list(zip(df[0].tolist(), df[1].tolist())))
+            
             for gene, val in list(self.counts[name].items()):
-                combined[gene] += val
-        for gene in combined:
-            combined[gene] = combined[gene]/len(self.counts)
-        self.combined_counts = combined
+                self.combined_counts[gene] += val
+                
+        for gene in self.combined_counts:
+            self.combined_counts[gene] = self.combined_counts[gene]/len(self.counts)
 
     def filter_read_counts(self, lower_cutoff_average=10):
+        
         if not(hasattr(self, 'combined_counts')):
-            self.read_counts_files()
-        df = self.clipdf
-        in_len = len(df.index)
+            self.read_counts_files()  # Filter by raw read count.
+            
+        in_len = len(self.clipdf.index)
+        
         above = [(self.combined_counts.get(x, 0)>=lower_cutoff_average) 
-            for x in df['gene_name'].tolist()]
+            for x in self.clipdf['gene_name'].tolist()]
+        
         def one_if_true(_):
             if _: return 1
             return 0
+        
         print(("{0}/{1} genes in clipdf above {2} average raw counts.".format(
-            sum([one_if_true(n) for n in above]), len(df.index), 
+            sum([one_if_true(n) for n in above]), len(self.clipdf.index), 
             lower_cutoff_average)))
-        self.clipdf = df[above].copy()
+        
+        self.clipdf = self.clipdf[above].copy()
         print(("Input clipdf len: {0} output {1}".format(
             in_len, len(self.clipdf.index))))
     
@@ -106,24 +106,43 @@ class volcanoMaker(peaksList.peaksList):
         self.name_to_wbid240 = dict(list(zip(list(self.wbid_to_name.values()),
                                      list(self.wbid_to_name.keys()))))
 
-        
     def read_programs(self):
         self.read_sp_vs_oo_as_programs()
         # The above sets self.program as (wb id -> program) dict.
 
     def read_clip_deseq_csv(self, fname, header_ok=False):
+        
         if not header_ok:
             self.fix_header(fname)
-        if not hasattr(self, 'gl_deseq'): self.gl_rnaseq()
-        clipdf = pandas.read_csv(fname, sep='\t', index_col=False)
-        clipdf = clipdf[clipdf['gene_name'] != '_no_feature']
-        clipdf = clipdf[clipdf['gene_name'] != '_ambiguous']
-        clipdf['gene_id'] = [self.name_to_wbid[x] for x in clipdf.gene_name]
-        clipdf['Wormbase ID'] = clipdf['gene_id']
-        clipdf['has_ortiz'] = [id_to_gl_deseq_val(x, self.gl_deseq)!=0 for \
-                               x in clipdf['gene_name']]
-        self.df = clipdf.copy()
-        self.clipdf = clipdf
+            
+        if not hasattr(self, 'gl_deseq'):
+            self.gl_rnaseq()
+            
+        self.clipdf = pandas.read_csv(fname, sep='\t', index_col=False)
+        
+        self.clipdf = self.clipdf[self.clipdf['gene_name'] != '_no_feature']
+        self.clipdf = self.clipdf[self.clipdf['gene_name'] != '_ambiguous']
+        
+        self.clipdf['gene_id'] = [self.name_to_wbid[x] for x in self.clipdf.gene_name]
+        self.clipdf['Wormbase ID'] = self.clipdf['gene_id']
+        self.clipdf['has_ortiz'] = [id_to_gl_deseq_val(x, self.gl_deseq)!=0 for \
+                               x in self.clipdf['gene_name']]
+        
+    def read_clip_deseq_excel(self, fname):
+
+        if not hasattr(self, 'gl_deseq'):
+            self.gl_rnaseq()
+            
+        self.clipdf = pandas.read_excel(fname)
+        self.clipdf['gene_name'] = self.clipdf.index
+        
+        self.clipdf = self.clipdf[self.clipdf['gene_name'] != '_no_feature']
+        self.clipdf = self.clipdf[self.clipdf['gene_name'] != '_ambiguous']
+        
+        self.clipdf['gene_id'] = [self.name_to_wbid[x] for x in self.clipdf.gene_name]
+        self.clipdf['Wormbase ID'] = self.clipdf['gene_id']
+        self.clipdf['has_ortiz'] = [id_to_gl_deseq_val(x, self.gl_deseq)!=0 for \
+                               x in self.clipdf['gene_name']]
 
     def fix_header(self, fname):
         l1r = ''
@@ -143,16 +162,22 @@ class volcanoMaker(peaksList.peaksList):
             print(("Fixed header to %s" % l1r))
 
     def table_of_stats(self, outf='tables/volcano_stats.txt'):
-        positive_control_genes = set("gld-1,htp-1,htp-2,mpk-1,him-3,fbf-1,lip-1,syp-2,fbf-2,fog-1,fem-3,syp-3,gld-3,fog-3,egl-4".split(','))
-        clip_deseq = self.clipdf[self.clipdf['has_ortiz']]
-        x_vals = clip_deseq['log2FoldChange'].tolist()
-        y_vals = [-np.log10(x) for x in clip_deseq['padj'].tolist()]
+        
+        positive_control_genes = set(
+            "gld-1,htp-1,htp-2,mpk-1,him-3,fbf-1,lip-1,syp-2,fbf-2,fog-1,fem-3,syp-3,gld-3,fog-3,egl-4".split(','))
+        
+        print('-------table_of_stats() self.clipdf.index = ', len(self.clipdf.index))
+        clip_deseq = self.clipdf[self.clipdf['has_ortiz']].copy()
+        print('-------table_of_stats() has_ortiz self.clipdf.index = ', len(clip_deseq.index))
+        
         sig_dif = clip_deseq[clip_deseq['padj']<0.01].copy()
         sig_dif['sig_up'] = [(x>=1) for x in sig_dif.log2FoldChange]
         sig_dif['sig_down'] = [(x<=-1) for x in sig_dif.log2FoldChange]
         sig_dif['sig_2_fold'] = [
             ((x>=1) or (x<=-1)) for x in sig_dif.log2FoldChange]
+        
         n_gl = float(len(clip_deseq.index))
+        
         def as_p(x, y):
             if type(x) == type(pandas.DataFrame()):
                 x = len(x.index)
@@ -160,8 +185,10 @@ class volcanoMaker(peaksList.peaksList):
             if int(float(100*x)/float(y)) == 0:
                 return "{} (0.{}%)".format(x, int(float(1000*x)/float(y)))
             return "{} ({}%)".format(x, int(float(100*x)/float(y)))
+        
         sp_enriched_sig = sig_dif[sig_dif['sig_up']].copy()
         oo_enriched_sig = sig_dif[sig_dif['sig_down']].copy()
+        
         st = {  # Stats table.
 'Total genes': len(self.clipdf.index),
 'With data in RNA-seq of germlines (Ortiz, et. al)': len(clip_deseq.index),
@@ -251,17 +278,22 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
               "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
         
         clip_deseq = self.clipdf[self.clipdf['has_ortiz']]
+        print('-------volcano_plot() self.clipdf.index = ', len(self.clipdf.index))
         
         cs = [self.id_to_color(x) for x in clip_deseq['gene_id'].tolist()]
-        #print self.program
-        #print cs[:100]
+
         x_vals = clip_deseq['log2FoldChange'].tolist()
-        if reverse_x: x_vals = [-x for x in x_vals]
+        if reverse_x:
+            x_vals = [-x for x in x_vals]
+            
         y_vals = [-np.log10(x) for x in clip_deseq['padj'].tolist()]
+        
+        r_val, p_val = scs.pearsonr([2**w for w in x_vals], [2**w for w in y_vals])
+        print("Pearson R for FoldChange vs FoldChange: {0} (R^2 {1} P value {2})".format(r_val, r_val**2, p_val))
+        r_val, p_val = scs.pearsonr(x_vals, y_vals)
+        print("Pearson R for log2FoldChange vs log2FoldChange: {0} (R^2 {1} P value {2})".format(r_val, r_val**2, p_val))
+        
         pltclose()
-        #fig, ax = plt.subplots()
-        #plt.rc({'markeredgewidth':0.0})
-        #matplotlib.rcParams['lines.markeredgewidth'] = 0.0
         plt.rcParams['lines.markeredgewidth'] = 0.0
         fig = plt.figure()
         
@@ -403,10 +435,16 @@ def pltclose():
 #cf = pandas.read_csv(, sep='\t')
 
 def write_excel_of_deseq(df_in, header='SPvOO'):
+    
     df = df_in.copy()
+    print('-------write_excel_of_deseq() clipdf.index = ', len(df.index))
     df = df[df['has_ortiz']].copy()
+    print('-------write_excel_of_deseq() has_ortiz clipdf.index = ', len(df.index))
     df = df[['gene_name','Wormbase ID', 'log2FoldChange', 
                 'pvalue', 'padj', 'Program']]
+    
+
+    
     def by_pval(_df, pval):
         df_s = _df[_df['BH-corrected p value']<pval].copy()
         if 'log2 fold enrichment SP/OO (FBF iCLIP)' in df_s.columns:
@@ -416,27 +454,35 @@ def write_excel_of_deseq(df_in, header='SPvOO'):
         df_sp = df_s[df_s[log2col]>1]
         df_oo = df_s[df_s[log2col]<-1]
         return df_sp, df_oo
+    
     if header == 'SPvOO':
         df.columns = [
             'Gene name', 'Wormbase ID',
             'log2 fold enrichment SP/OO (FBF iCLIP)',
             'Unadjusted p value', 'BH-corrected p value',
             'Program (Noble et al. 2016)']
+        
         writer = pandas.ExcelWriter(
             'tables/Table S4 Gender differences DESeq2.xlsx')
+        
         df_sp, df_oo = by_pval(df, 0.01)
+        
         df_sp.to_excel(
             writer, sheet_name='SP enriched P<0.01', index=False)
         df_oo.to_excel(
             writer, sheet_name='OO enriched P<0.01', index=False)
+        
         df_sp, df_oo = by_pval(df, 0.05)
+        
         df_sp.to_excel(
             writer, sheet_name='SP enriched P<0.05', index=False)
         df_oo.to_excel(
             writer, sheet_name='OO enriched P<0.05', index=False)
         df.to_excel(
             writer, sheet_name='All DESeq2 results', index=False)
+        
         writer.save()
+        
     elif header == 'HTvLT':
         df.columns = [
             'Gene name', 'Wormbase ID',
@@ -478,10 +524,11 @@ def run():
     v.read_clip_deseq_csv('tables/6_reps_sp_vs_oo.txt')
     v.filter_read_counts(lower_cutoff_average=20)
     v.read_sp_vs_oo_as_programs()
-    write_excel_of_deseq(v.df.copy(), header='SPvOO')
+    write_excel_of_deseq(v.clipdf.copy(), header='SPvOO')
     v.table_of_stats()
-    v.volcano_plot(xlabel='FBF spermatogenic/oogenic (log2)',
-                   output_name='figs/Fig 2D volcano.pdf')
+    v.volcano_plot(
+        xlabel='FBF spermatogenic/oogenic (log2)',
+        output_name='figs/Fig 2D volcano.pdf')
     v.volcano_plot_blocks(
         xlabel='FBF spermatogenic/oogenic (log2)',
         output_name='figs/Fig 3B volcano blocks.pdf')
@@ -490,6 +537,5 @@ def run():
 if __name__ == '__main__':
     in_file = '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/File S6 Blocks.xlsx'
 
-    
-    import programs_in_blocks 
+    #import programs_in_blocks 
     run()

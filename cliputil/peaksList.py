@@ -26,6 +26,7 @@ class peaksList(object):
 
     def read_csv(self, fname):
         self.df = pandas.read_csv(fname, sep='\t', index_col=False)
+        
         if 'Wormbase ID' not in self.df.columns and 'WB ID' in self.df.columns:
             self.df['Wormbase ID'] = self.df['WB ID']
         if 'WB ID' not in self.df.columns and 'Wormbase ID' in self.df.columns:
@@ -43,8 +44,10 @@ class peaksList(object):
     def dict_by_first_instance(self, list_of_tups):
         if len(list_of_tups) < 1:
             return collections.defaultdict(str)
+        
         if len(list_of_tups[0]) < 2:
             return collections.defaultdict(str)
+        
         to_y = collections.defaultdict(type(list_of_tups[1]))
         for x in list_of_tups:
             if x[0] in to_y:
@@ -69,16 +72,25 @@ class peaksList(object):
         self.df['Is CLIP target?'] = [ x in clip_wb for x in self.df['Wormbase ID'] ]
         self.df['CLIP height'] = [ to_peaks[x] for x in self.df['Wormbase ID'] ]
 
-    def read_sp_vs_oo_as_programs(self, fname_oo='/opt/lib/ortiz/TableS1_oogenic.txt', fname_sp='/opt/lib/ortiz/TableS2_spermatogenic.txt', gtf_fname='/opt/lib/gtf_with_names_column.txt'):
-        #print 'self.gene_name_col='
-        #print self.gene_name_col
+    def read_sp_vs_oo_as_programs(
+            self, fname_oo='/opt/lib/ortiz/TableS1_oogenic.txt',
+            fname_sp='/opt/lib/ortiz/TableS2_spermatogenic.txt',
+            gtf_fname='/opt/lib/gtf_with_names_column.txt'):
+        """Read data from Ortiz et al."""
+
         if not hasattr(self, 'wbid_to_name'):
             self.transl(gtf_fname)
-        oo_df = pandas.read_csv(open(fname_oo), sep='\t', index_col=False)
+            
+        oo_df = pandas.read_csv(fname_oo, sep='\t', index_col=False)
         sp_df = pandas.read_csv(fname_sp, sep='\t', index_col=False)
-        sp_df['Program'] = [ re.sub('Spermatogenic and Oogenic', 'Oogenic and Spermatogenic', x) for x in sp_df['Program'].tolist() ]
+        
+        sp_df['Program'] = [  # Clean up.
+            re.sub('Spermatogenic and Oogenic', 'Oogenic and Spermatogenic', x) for x in sp_df['Program'].tolist()]
+        
         wb_program_oo = dict(zip(oo_df['Wormbase ID'].tolist(), oo_df['Program'].tolist()))
         wb_program_sp = dict(zip(sp_df['Wormbase ID'].tolist(), sp_df['Program'].tolist()))
+        
+        # Error check.
         for k in set(wb_program_oo) & set(wb_program_sp):
             if wb_program_oo[k] != wb_program_sp[k]:
                 print('Contradiction between %s and %s: %s (%s vs %s).' % (fname_oo,
@@ -90,27 +102,22 @@ class peaksList(object):
         wb_program_oo.update(wb_program_sp)
         self.program = wb_program_oo
         self.add_programs_to_df(self.df)
-        print("""From Nobel et al., loaded {0} SP genes, {1} OO genes,
-and {2} total GL genes.""".format(len(sp_df['Wormbase ID'].tolist()),
-    len(oo_df['Wormbase ID'].tolist()), len(self.program)))
-        #print self.df
-        #sys.exit()
+        
+        print("From Nobel et al., loaded {0} SP genes, {1} OO genes, and {2} total GL genes.".format(
+            len(sp_df['Wormbase ID'].tolist()), len(oo_df['Wormbase ID'].tolist()), len(self.program)))
+
         if hasattr(self, 'clipdf'):
             self.add_programs_to_df(self.clipdf)
             print("CLIP peaks in a GL program: {0}".format(
-            self.clipdf['Program'].value_counts()))
+                self.clipdf['Program'].value_counts()))
 
     def add_programs_to_df(self, _df):
-        if 'Wormbase ID' not in _df.columns and self.gene_name_col in _df.columns:
-            _df['Wormbase ID'] = [ self.name_to_wbid[x] for x in _df[self.gene_name_col].tolist() ]
-        if 'Wormbase ID' in _df.columns:
-            _df['Program'] = [ self.what_program(x) for x in _df['Wormbase ID'].tolist() ]
         
-    def what_program(self, x):
-        if x in self.program:
-            return self.program[x]
-        else:
-            return ''
+        if 'Wormbase ID' not in _df.columns and self.gene_name_col in _df.columns:
+            _df['Wormbase ID'] = [self.name_to_wbid[x] for x in _df[self.gene_name_col].tolist()]
+            
+        if 'Wormbase ID' in _df.columns:
+            _df['Program'] = [self.program.get(x, '') for x in _df['Wormbase ID'].tolist()]
 
     def transl(self, gtfname='/opt/lib/gtf_with_names_column.txt'):
         gtf = pandas.read_csv(gtfname, sep='\t')
