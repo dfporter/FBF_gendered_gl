@@ -3,8 +3,6 @@ Comparing FBF iCLIP in differnt cell types
 
 Code for a paper on FBF in the gendered transcriptome. 
 
- Most of the code is old enough to lack good formating or organization.
-
 This analysis begins with the filtered, separately called oo/sp/20deg peaks
  files and associated wig files.
 
@@ -20,11 +18,6 @@ Essentially, CLIP data constitutes:
 
 The second type of input into this analysis is a variety of library files,
  placed under /opt/lib/.
-
- The analysis files are:
-
-1. DESeq2 of sp/oo germlines
-2. GL mitotic SAM.  # This was not included in the paper, and isn't used anymore.
 
 CLIP datasets used:
 
@@ -87,8 +80,6 @@ python cliputil/score_metrics.py -c auto.ini -p combined_filtered/
 
 Supplementary tables
 ---
-
-Needs documentation.
 
 ```bash
 # File S1 Peaks
