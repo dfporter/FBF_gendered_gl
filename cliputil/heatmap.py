@@ -20,6 +20,7 @@ from collections import defaultdict
 #from scipy.cluster import hierarchy
 
 import figureMaker
+import utils
 from peaksList import peaksList
 #import vennMaker
 from blocks import blocki, blockii, blockiii
@@ -30,13 +31,14 @@ rl(countsFileIO)
 rl(countsColumnsNaming)
         
 class heatmapMaker(figureMaker.figureMaker,
+                   utils.translator,
                    #countsColumnsNaming.countsColumnsNaming,
                    countsFileIO.countsFileIO):
 
     def load_counts(self, fname='combined_counts.txt', log_scale=True,
-                        only_combined_datasets=True, style='heatmap'):
-        self.load_counts_file(fname='combined_counts.txt', log_scale=True,
-                        only_combined_datasets=True, style='heatmap')
+                        only_combined_datasets=True):
+        self.load_counts_file(fname=fname, log_scale=True,
+                        only_combined_datasets=only_combined_datasets, style='heatmap')
         self.rm_non_target_rnas(only_combined_datasets=only_combined_datasets)
         
     def rm_non_target_rnas(self, cutoff=1, only_combined_datasets=False):
@@ -58,7 +60,8 @@ class heatmapMaker(figureMaker.figureMaker,
             for name in self.targs[k]:
                 all_targets[name] += 1
                 
-        print("self.targs.keys(): ", self.targs.keys())
+        print("heatmap.rm_non_target_rnas(): self.targs.keys(): ", self.targs.keys())
+        print("Targets in peaks files: ", len(all_targets))
 
         self.counts_df = self.counts_df.loc[[
             #((x in all_targets) and (all_targets[x] >= cutoff)) for x in self.counts_df.index]]
@@ -71,8 +74,24 @@ class heatmapMaker(figureMaker.figureMaker,
         print("all_targ ", len(all_targ))
         print("Targets here but not in self.targs: ", here - all_targ)
         print("Targets in self.targs but not here: ", all_targ - here)
+        
+        self.transl()  # utils.translator() loads gtf mappings.
+        
+        print("biotypes peaks in SP/OO (from gtf, not peaks file.):")
+        self.count_biotypes(all_targ)
+        print("biotypes from counts file (from gtf):")
+        self.count_biotypes(here)
+        
         self.cts = self.counts_df
         return self.cts
+    
+    def count_biotypes(self, names_list):
+        biotypes = collections.defaultdict(int)
+        for name in list(names_list):
+            biotypes[self.name_to_biotype.get(name, '')] += 1
+        print('---\nSum ', len(names_list))
+        print(biotypes)
+        return biotypes
     
     def add_sp_oo(self):
         from peaksList import peaksList
@@ -84,8 +103,6 @@ class heatmapMaker(figureMaker.figureMaker,
                                      x in self.counts_df.index]
         #self.counts_df['SP/OO FC'] = [self.gl_pkl.name_to_fc(x) for \
         #                             x in self.counts_df.index]
-
-
 
     def rm_controls(self):
         for k in ['c_sp_1', 'c_n2_1', 'c_oo_1', 'ave_neg']:
@@ -104,22 +121,28 @@ class heatmapMaker(figureMaker.figureMaker,
         for x in set(to_del):
             del self.counts_df[x]
 
-
-            
     def heatmap_counts_file(self, fname=None):
-        if fname is not None: self.load_counts_file(fname)
+        
+        if fname is not None:
+            self.load_counts_file(fname)
+            
         _dict = defaultdict(dict)
-        def _add(_d, n): _d[n] = 1
+        
+        def _add(_d, n):
+            _d[n] = 1
+            
         for k in self.targs:
             for name in self.targs[k]: _dict[name][k] = 1
+                
         for name in _dict:
             for k in [_ for _ in self.targs if (_ not in _dict[name])]:
                 _dict[name][k] = 0
-        df = pandas.DataFrame(_dict.values(), index=_dict.keys())
-        return df
+
+        return pandas.DataFrame(_dict.values(), index=_dict.keys())
 
     def pairwise(self, df=None):
-        if df is None: df = self.counts_df
+        if df is None:
+            df = self.counts_df
         return df.corr()
 
 

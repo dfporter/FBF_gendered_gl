@@ -67,6 +67,7 @@ class figureMaker():
         if len(self.biotypes) > 0:
             print("Was able to read biotypes from peaks files.")
             
-            
     def read_csv(self, fname):
         return pandas.read_csv(fname, sep='\t', index_col=False)
+
+#    def n_gene_names(self, df):

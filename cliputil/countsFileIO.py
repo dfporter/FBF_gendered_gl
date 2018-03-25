@@ -111,7 +111,6 @@ class countsFileIO(countsColumnsNaming.countsColumnsNaming):
 
             self.rm_controls()
 
-
         return self.counts_df
     
     def to_reads_per_mil(self, df):
@@ -140,8 +139,6 @@ class countsFileIO(countsColumnsNaming.countsColumnsNaming):
         return df
 
     def subtract_controls(self, df):
-        print(df.columns)
-        print('--')
         
         def subtract(exp_cols, control_col, df):
             for k in exp_cols:

@@ -5,9 +5,50 @@ import re
 import sys
 import collections
 import HTSeq
-from locatedPeak import locatedPeak
 
-class peaksList(object):
+from locatedPeak import locatedPeak
+import utils
+
+class nameTo():
+    
+    def name_to_fc(self, name):
+        if name in self.gene_name_to_fc:
+            return self.gene_name_to_fc[name]
+        elif name in self.loci_to_fc:
+            return self.loci_to_fc[name]
+        else:
+            return np.nan
+
+    def name_to_sp_oo_class(self, name):
+        if name in self.gene_name_to_class:
+            return self.gene_name_to_class[name]
+        elif name in self.loci_to_class:
+            return self.loci_to_class[name]
+        else:
+            return np.nan
+
+    def name_to_oo_rpkm(self, name):
+        if name in self.gene_name_to_oo_rpkm:
+            return self.gene_name_to_oo_rpkm[name]
+        elif name in self.loci_to_oo_rpkm:
+            return self.loci_to_oo_rpkm[name]
+        elif name in self.wb_id_to_oo_rpkm:
+            return self.wb_id_to_oo_rpkm[name]
+        else:
+            return np.nan
+
+    def name_to_sp_rpkm(self, name):
+        if name in self.gene_name_to_sp_rpkm:
+            return self.gene_name_to_sp_rpkm[name]
+        elif name in self.loci_to_sp_rpkm:
+            return self.loci_to_sp_rpkm[name]
+        elif name in self.wb_id_to_sp_rpkm:
+            return self.wb_id_to_sp_rpkm[name]
+        else:
+            return np.nan
+    
+    
+class peaksList(nameTo, utils.translator):
 
     def __init__(self, dataframe=pandas.DataFrame(), name='Unnamed', gene_name_col='gene_name'):
         self.name = name
@@ -15,16 +56,25 @@ class peaksList(object):
         self.gene_name_col = gene_name_col
 
     def __str__(self):
-        li = '\n{a}:\n{b} peaks\n{c} genes\n'.format(a=self.name, b=len(self.df.index), c=len(set(self.df[self.gene_name_col].tolist())))
+        
+        li = '\n{0}:\n{1} peaks\n{2} genes\n'.format(
+            self.name, len(self.df.index), len(set(self.df[self.gene_name_col].tolist())))
+        
         if 'Classification OO/SP GL' in self.df.columns:
-            li += '\nClassifications  (from Ortiz Deseq file):\n{d}'.format(d=str(self.df['Classification OO/SP GL'].value_counts()))
+            li += '\nClassifications  (from Ortiz Deseq file):\n{0}'.format(
+                str(self.df['Classification OO/SP GL'].value_counts()))
+            
         if 'Program' in self.df.columns:
-            li += '\nPrograms:\n{d}'.format(d=str(self.df['Program'].value_counts()))
+            li += '\nPrograms:\n{0}'.format(str(self.df['Program'].value_counts()))
+            
         return li
 
     def read_csv(self, fname):
+        """Read a peaks file."""
+        
         self.df = pandas.read_csv(fname, sep='\t', index_col=False)
         
+        # Rename columns.
         if 'Wormbase ID' not in self.df.columns and 'WB ID' in self.df.columns:
             self.df['Wormbase ID'] = self.df['WB ID']
         if 'WB ID' not in self.df.columns and 'Wormbase ID' in self.df.columns:
@@ -33,6 +83,8 @@ class peaksList(object):
             self.df['Wormbase ID'] = self.df['WB Gene ID']
         if 'chrom' in self.df.columns and 'chrm' not in self.df.columns:
             self.df['chrm'] = self.df['chrom']
+            
+        # Sort by read counts.
         if 'exp_reads' in self.df.columns:
             self.df.sort_values(by='exp_reads', ascending=False, inplace=True)
 
@@ -53,23 +105,7 @@ class peaksList(object):
             to_y[x[0]] = x[1]
 
         return to_y
-
-    def add_rip(self, fname='/opt/lib/fog3rip/TableS4_fog3_rip_targets.txt'):
-        rip = pandas.read_csv(fname, sep='\t', index_col=False)
-        rip['SAM rank'] = [ int(x) for x in rip['FOG-3 Rank'] ]
-        to_sam = self.dict_by_first_instance(zip(rip['WB ID'].tolist(), rip['SAM rank'].tolist()))
-        rip_wb = set(rip['WB ID'].tolist())
-        self.df['Is RIP target?'] = [ x in rip_wb for x in self.df['Wormbase ID'].tolist() ]
-        self.df['SAM rank'] = [ to_sam[x] for x in self.df['Wormbase ID'].tolist() ]
-
-    def add_permutation_peaks(self, fname):
-        peaks = pandas.read_csv(fname, sep='\t', index_col=False)
-        to_peaks = self.dict_by_first_instance(zip(peaks['gene_id'].tolist(), peaks['height'].tolist()))
-        clip_wb = set(peaks['gene_id'].tolist())
-        print('clip wb IDs: {a}'.format(a=len(clip_wb)))
-        self.df['Is CLIP target?'] = [ x in clip_wb for x in self.df['Wormbase ID'] ]
-        self.df['CLIP height'] = [ to_peaks[x] for x in self.df['Wormbase ID'] ]
-
+    
     def read_sp_vs_oo_as_programs(
             self, fname_oo='/opt/lib/ortiz/TableS1_oogenic.txt',
             fname_sp='/opt/lib/ortiz/TableS2_spermatogenic.txt',
@@ -117,13 +153,6 @@ class peaksList(object):
         if 'Wormbase ID' in _df.columns:
             _df['Program'] = [self.program.get(x, '') for x in _df['Wormbase ID'].tolist()]
 
-    def transl(self, gtfname='/opt/lib/gtf_with_names_column.txt'):
-        gtf = pandas.read_csv(gtfname, sep='\t')
-        self.wbid_to_name = collections.defaultdict(str)
-        self.wbid_to_name.update(dict(zip(gtf['gene_id'].tolist(), gtf['gene_name'].tolist())))
-        self.name_to_wbid = collections.defaultdict(str)
-        self.name_to_wbid.update(dict(zip(gtf['gene_name'].tolist(), gtf['gene_id'].tolist())))
-        self.name_to_biotype = dict(zip(gtf['gene_name'].tolist(), gtf['biotype'].tolist()))
 
     def programs_as_public_names(self):
         self.programs_as_pub_name = {}
@@ -164,42 +193,6 @@ class peaksList(object):
         self.loci_to_sp_rpkm = dict(zip(self.ortiz['Gene ID'].tolist(), self.ortiz['Expression in fem-3 gonads (RPKM)'].tolist()))
         self.wb_id_to_oo_rpkm = dict(zip(self.ortiz['WormBase ID (WS240)'].tolist(), self.ortiz['Expression in  fog-2 gonads (RPKM)'].tolist()))
         self.wb_id_to_sp_rpkm = dict(zip(self.ortiz['WormBase ID (WS240)'].tolist(), self.ortiz['Expression in fem-3 gonads (RPKM)'].tolist()))
-
-    def name_to_fc(self, name):
-        if name in self.gene_name_to_fc:
-            return self.gene_name_to_fc[name]
-        elif name in self.loci_to_fc:
-            return self.loci_to_fc[name]
-        else:
-            return np.nan
-
-    def name_to_sp_oo_class(self, name):
-        if name in self.gene_name_to_class:
-            return self.gene_name_to_class[name]
-        elif name in self.loci_to_class:
-            return self.loci_to_class[name]
-        else:
-            return np.nan
-
-    def name_to_oo_rpkm(self, name):
-        if name in self.gene_name_to_oo_rpkm:
-            return self.gene_name_to_oo_rpkm[name]
-        elif name in self.loci_to_oo_rpkm:
-            return self.loci_to_oo_rpkm[name]
-        elif name in self.wb_id_to_oo_rpkm:
-            return self.wb_id_to_oo_rpkm[name]
-        else:
-            return np.nan
-
-    def name_to_sp_rpkm(self, name):
-        if name in self.gene_name_to_sp_rpkm:
-            return self.gene_name_to_sp_rpkm[name]
-        elif name in self.loci_to_sp_rpkm:
-            return self.loci_to_sp_rpkm[name]
-        elif name in self.wb_id_to_sp_rpkm:
-            return self.wb_id_to_sp_rpkm[name]
-        else:
-            return np.nan
 
     def annotate_sp_vs_oo(self):
         self.read_sp_vs_oo()
@@ -245,7 +238,7 @@ class peaksList(object):
         return
 
     def add_seqs(self, sequences):
-        seq = [ seq_from_iv(tup[0], tup[1], tup[2], tup[3], sequences) for tup in zip(self.df.chrm, self.df.left, self.df.right, self.df.strand) ]
+        seq = [ utils.seq_from_iv(tup[0], tup[1], tup[2], tup[3], sequences) for tup in zip(self.df.chrm, self.df.left, self.df.right, self.df.strand) ]
         self.df['seq'] = seq
 
     def merge_ranges_with_other_peaksList(self, _p, use_name='gene_name'):
@@ -263,7 +256,7 @@ class peaksList(object):
         merged = collections.defaultdict(list)
         for k in ivs_a:
             if k in ivs_b:
-                a, b, c = overlaps_in_lists(ivs_a[k], ivs_b[k])
+                a, b, c = utils.overlaps_in_lists(ivs_a[k], ivs_b[k])
                 merged[k] = a + b + c
             else:
                 merged[k] = ivs_a[k]
@@ -273,102 +266,24 @@ class peaksList(object):
 
         merged_list = []
         for k in merged:
-            merged_list = merged_list + overlaps_in_one_list(merged[k])
+            merged_list = merged_list + utils.overlaps_in_one_list(merged[k])
 
         return merged_list
 
 
-def overlaps_in_one_list(_list):
 
-    def get_overlaps_if_exist(_list):
-        overlapping = []
-        a_only = []
-        if len(_list) < 2:
-            return _list
-        for x, a in enumerate(_list[:-1]):
-            overlaps = False
-            c = list(a)
-            for y, b in enumerate(_list[x + 1:]):
-                if overlap_of_tups(a, b):
-                    c[1] = min([c[1], b[1]])
-                    c[2] = max([c[2], b[2]])
-                    overlaps = True
+   # def add_rip(self, fname='/opt/lib/fog3rip/TableS4_fog3_rip_targets.txt'):
+   #     rip = pandas.read_csv(fname, sep='\t', index_col=False)
+   #     rip['SAM rank'] = [ int(x) for x in rip['FOG-3 Rank'] ]
+   #     to_sam = self.dict_by_first_instance(zip(rip['WB ID'].tolist(), rip['SAM rank'].tolist()))
+   #     rip_wb = set(rip['WB ID'].tolist())
+   #     self.df['Is RIP target?'] = [ x in rip_wb for x in self.df['Wormbase ID'].tolist() ]
+   #     self.df['SAM rank'] = [ to_sam[x] for x in self.df['Wormbase ID'].tolist() ]
 
-            if overlaps:
-                overlapping.append(tuple(c))
-            else:
-                a_only.append(a)
-
-        return (a_only, overlapping)
-
-    overlapping = ['init']
-    merged = _list
-    while len(overlapping) > 0:
-        a_only, overlapping = get_overlaps_if_exist(merged)
-        merged = a_only + overlapping
-        print('Merging {0} uinique, {1} overlapping ){2}...'.format(len(a_only), len(overlapping), str(overlapping)[:100]))
-
-    return merged
-
-
-def overlaps_in_lists(list_a, list_b):
-    overlapping = []
-    a_only = []
-    b_only = []
-    for a in list_a:
-        c = list(a)
-        overlaps = False
-        for b in list_b:
-            if overlap_of_tups(a, b):
-                c[1] = min([c[1], b[1]])
-                c[2] = max([c[2], b[2]])
-                overlaps = True
-
-        if overlaps:
-            overlapping.append(tuple(c))
-        else:
-            a_only.append(a)
-
-    for b in list_b:
-        overlaps = False
-        for a in list_a:
-            if overlap_of_tups(a, b):
-                overlaps = True
-
-        if not overlaps:
-            b_only.append(b)
-
-    return (a_only, overlapping, b_only)
-
-
-def overlap_of_tups(a, b):
-    if not (a[1] <= b[1] <= a[2] or a[1] <= b[2] <= a[2] or b[1]) <= a[1] <= b[2]:
-        return b[1] <= a[2] <= b[2] and True
-    else:
-        return False
-
-
-def seq_from_iv(chrm, start, end, strand, sequences):
-    seq = sequences[chrm][start:end]
-    if strand == '-':
-        return rc(seq)
-    else:
-        return seq
-
-
-def complement(s):
-    basecomplement = {'A': 'T',
-     'C': 'G',
-     'G': 'C',
-     'T': 'A',
-     'N': 'N',
-     'a': 't',
-     'c': 'g',
-     'g': 'c',
-     't': 'a',
-     'n': 'n'}
-    return ''.join([ basecomplement[base] for base in list(s) ])
-
-
-def rc(s):
-    return complement(s[::-1])
+   # def add_permutation_peaks(self, fname):
+   #     peaks = pandas.read_csv(fname, sep='\t', index_col=False)
+   #     to_peaks = self.dict_by_first_instance(zip(peaks['gene_id'].tolist(), peaks['height'].tolist()))
+   #     clip_wb = set(peaks['gene_id'].tolist())
+   #     print('clip wb IDs: {a}'.format(a=len(clip_wb)))
+   #     self.df['Is CLIP target?'] = [ x in clip_wb for x in self.df['Wormbase ID'] ]
+   #     self.df['CLIP height'] = [ to_peaks[x] for x in self.df['Wormbase ID'] ]

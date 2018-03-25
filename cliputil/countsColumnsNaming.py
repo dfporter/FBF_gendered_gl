@@ -27,13 +27,12 @@ class countsColumnsNaming():
     
     def shorten_names_and_subset_columns(self):
         def clean(n):
+            
             n = re.sub('fbf', 'F', re.sub('rt.*and.*', '', re.sub('exp_', '',
                     re.sub('control_', 'c_', re.sub('_counts.txt', '',
                     re.sub('[A-Z]{4}', 'i', n)))
                           )))
-            print("n:", n)
-            m = re.search('F_sp_', n)
-            print('match? ', m)
+
             n = re.sub('F_sp_', 'SP FBF', n)
             n = re.sub('F_oo_', 'OO FBF', n)
             n = re.sub('F1_i', 'LT FBF1', n)
@@ -42,7 +41,6 @@ class countsColumnsNaming():
         
         known = []
         for i, col in enumerate(self.counts_df.columns):
-            print(col, '->')
                   
             if col == 'ave_neg':
                 known.append(x)
@@ -56,8 +54,6 @@ class countsColumnsNaming():
                 if rep > 9:
                     break
                 name = name[:-1] + str(rep)
-            #print("----> {0}\n\n\n".format(name))
             known.append(name)
-            print('>', name)
             
         self.counts_df.columns = known

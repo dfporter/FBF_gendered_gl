@@ -15,6 +15,7 @@ import matplotlib
 from matplotlib_venn import venn2, venn3, venn3_circles
 import matplotlib_venn
 
+import utils
 import peaksList
 import figureMaker
 from peaksList import *
@@ -141,8 +142,29 @@ class vennPainter():
             ], ax=ax, set_labels=_lab)
         return v
     
-class vennMaker(figureMaker.figureMaker, vennPainter):
-
+class vennMaker(figureMaker.figureMaker, vennPainter, utils.translator):
+    
+    def compare_biotypes_assignments(self):
+        all_targs = self.targs['oo_both'] | self.targs['sp_both']
+        self.transl()  # utils.translator. Sets self.name_to_biotype dict.
+        
+        agree, disagree = (set(), set())
+        
+        for name in list(all_targs):
+            gtf_biotype = self.name_to_biotype.get(name, '')
+            peaks_file_biotype = self.biotypes.get(name, '')
+            if gtf_biotype == peaks_file_biotype:
+                agree.add(name)
+            else:
+                disagree.add(name)
+        
+        print("The peaks file and gtf agreed on the biotypes of {0} RNAs, and disagreed on {1}".format(
+            len(agree), len(disagree)))
+        
+        print("The disagreements were: ")
+        for name in disagree:
+            print("{0}: peaks: {1} gtf {2}".format(name, self.biotypes.get(name, ''), self.name_to_biotype.get(name, '')))
+            
     def oo_vs_sp(self, ax, make_figure=True, look_at_biotypes=True, **kwargs):
         
         if ('a' not in kwargs) and ('b' not in kwargs):
