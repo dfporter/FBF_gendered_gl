@@ -10,154 +10,70 @@ import seaborn
 import scipy
 import scipy.stats as scs
 
+import importlib
+
+rl = importlib.reload
+
 import re
 from collections import defaultdict
 #from scipy.spatial import distance
 #from scipy.cluster import hierarchy
 
+import figureMaker
 from peaksList import peaksList
-from vennMaker import label_to_fname, fname_to_label, vennMaker
+#import vennMaker
 from blocks import blocki, blockii, blockiii
+import countsColumnsNaming
+import countsFileIO
 
-to_len={
-'exp_fbf_oo_rt9_and1_counts.txt': 2108384,
-'exp_fbf_oo_rt11_and_6_counts.txt': 1084505,
-'exp_fbf_oo_rt2_and_13_counts.txt': 1104292,
-
-'fbf2_oo_lane2_rt2_counts.txt': 593974,
-'fbf1_oo_lane2_rt6_counts.txt': 813150,
-'fbf2_oo_lane2_rt13_counts.txt': 510318,
-'fbf1_oo_lane2_rt9_counts.txt': 2087441,
-'exp_fbf2_oo_lane2_rt11_counts.txt': 271355,
-'exp_fbf1_oo_lane2_rt6_counts.txt': 813150,
-'exp_fbf1_oo_lane2_rt1_counts.txt': 20943,
-'fbf2_oo_lane2_rt11_counts.txt': 271355,
-'fbf1_oo_lane2_rt1_counts.txt': 20943,
-
-
-'control_oo_counts.txt': 669244,
-'control_sp_lane3_rt15_counts.txt': 72787,
-'control_oo_lane1_rt15_counts.txt': 337373,
-'control_oo_lane1_rt16_counts.txt': 165648,
-'control_oo_lane1_rt3_counts.txt': 166223,
-
-
-'exp_fbf1_CGGA_counts.txt': 1341859,
-'exp_fbf2_TGGC_counts.txt': 1932659,
-'exp_fbf2_GGTT_counts.txt': 348788,
-'exp_fbf2_CGGA_counts.txt': 2505596,
-'exp_fbf1_GGTT_counts.txt': 3558177,
-'exp_fbf1_TGGC_counts.txt': 4277008,
-
-'fbf2_sp_lane1_rt13_counts.txt': 1298522,
-'exp_fbf2_sp_lane1_rt14_counts.txt': 999598,
-'exp_fbf2_sp_lane1_rt2_counts.txt': 762755,
-'fbf1_sp_lane1_rt6_counts.txt': 597193,
-'fbf1_sp_lane1_rt1_counts.txt': 1128000,
-'exp_fbf1_sp_lane1_rt1_counts.txt': 1128000,
-'fbf1_sp_lane1_rt9_counts.txt': 1386301,
-'exp_fbf1_sp_lane1_rt6_counts.txt': 597193,
-
-'exp_fbf_sp_rt_1_and14_counts.txt': 2127598,
-'exp_fbf_sp_rt6_and9_counts.txt': 1983494,
-'exp_fbf_sp_rt2_and_13_counts.txt': 2061277,
-
-'exp_fbf1_oo_lane2_rt9_counts.txt': 2087441,
-
-'control_sp_lane3_rt3_counts.txt': 139152,
-'control_sp_counts.txt': 390956,
-'control_sp_lane3_rt16_counts.txt': 179017,
-
-'control_n2_counts.txt': 268768,
-'control_n2_matching_fbf2_CCGG_counts.txt': 13314,
-'control_n2_matching_fbf2_TTGT_counts.txt': 40194,
-'control_n2_matching_fbf2_GGCA_counts.txt': 215260,
-
-'exp_fbf2_sp_lane1_rt13_counts.txt': 1298522,
-'exp_fbf1_sp_lane1_rt9_counts.txt': 1386301,
-'fbf2_sp_lane1_rt2_counts.txt': 762755,
-'fbf2_sp_lane1_rt14_counts.txt': 999598,
-
-'n2_oo_lane1_rt16_counts.txt': 165648,
-'n2_oo_lane1_rt15_counts.txt': 337373,
-'n2_oo_lane1_rt3_counts.txt': 166223,
-
-'exp_fbf2_oo_lane2_rt13_counts.txt': 510318,
-'exp_fbf2_oo_lane2_rt2_counts.txt': 593974,
-'SP RPKM': 1e6,
-'OO RPKM': 1e6}
-
-class heatmapMaker(vennMaker):
-
-    def to_reads_per_mil(self, df):
-        for col in [x for x in df.columns if (x != 'gene')]:
-            df[col] = [1e6 * x/to_len[col] for x in df[col].tolist()]
-        return df
-
-    def scale_columns(self, df):
-#        def fix(x):
-#            return re.sub('all_bed_collapsed/', '',
-#                        re.sub('\.bed', '_counts.txt', x))
-        def _log(x):
-            if (x>=0.25): return np.log2(x)
-            else: return -2
+rl(countsFileIO)
+rl(countsColumnsNaming)
         
-        def ceiling(x):
-            if x < 1E3:
-                return x
-            else:
-                return 1E3
+class heatmapMaker(figureMaker.figureMaker,
+                   #countsColumnsNaming.countsColumnsNaming,
+                   countsFileIO.countsFileIO):
+
+    def load_counts(self, fname='combined_counts.txt', log_scale=True,
+                        only_combined_datasets=True, style='heatmap'):
+        self.load_counts_file(fname='combined_counts.txt', log_scale=True,
+                        only_combined_datasets=True, style='heatmap')
+        self.rm_non_target_rnas(only_combined_datasets=only_combined_datasets)
         
-        for col in df.columns:
-            if col == 'gene': continue
-            df[col] = [_log(y) for y in df[col].tolist()]
-            #df[col].replace([np.inf, -np.inf, float(np.log2(0))], 0)
-        return df
+    def rm_non_target_rnas(self, cutoff=1, only_combined_datasets=False):
+        all_targets = collections.defaultdict(int)
+        
+        for k in self.targs:
+            if only_combined_datasets:
+                alt = """
+                if ((not re.search('both', k) and (not re.search('old', k)))
+                ):
+                    continue  # Not a combined dataset
+                if k[:3] == 'old':#_fbf1_to_fbf2_n2':
+                    continue  # Only using old_fbf1_to_fbf2_n2
+                    """
+                if not (k == 'oo_both' or k == 'sp_both'):
+                    continue
+            if (re.search('control', k)):
+                continue
+            for name in self.targs[k]:
+                all_targets[name] += 1
+                
+        print("self.targs.keys(): ", self.targs.keys())
 
-    def subtract_controls(self, df):
-        def subtract(exp_cols, control_col, df):
-            for k in exp_cols:
-                df[k] = [a - b for a, b in \
-                         zip(df[k].tolist(), df[control_col].tolist())]
-            return df
-        tups = zip(
-            df['c_sp_1'].tolist(), df['c_oo_1'].tolist(),
-            df['c_n2_1'].tolist())
-        df['ave_neg'] = [np.sum(t)/3. for t in tups]
-        df = subtract(('SP FBF_1', 'SP FBF_2', 'SP FBF_3'), 'ave_neg', df)
-        df = subtract(('OO FBF_1', 'OO FBF_2', 'OO FBF_3'), 'ave_neg', df)
-        df = subtract(('LT FBF1_1', 'LT FBF1_2', 'LT FBF1_3'), 'ave_neg', df)
-        df = subtract(('LT FBF2_1', 'LT FBF2_2', 'LT FBF2_3'), 'ave_neg', df)
-        return df
-
-    def normalize_columns(self, df):
-        cols_to_norm = [x for x in df.columns if x != 'gene']
-        df[cols_to_norm] = df[cols_to_norm].apply(
-            lambda x: (x - x.mean()) / (x.max() - x.min()))
-        return df
-
-    def name_is_one_of_11_ht_reps(self, x):
-        if (re.search('fbf\d', x) and (
-            re.search('oo', x) or re.search('sp', x))):
-            return True
-        #elif (re.search('control.*lane.*', x)):
-        #    return True
-        else:
-            return False
-
-    def name_is_a_combined_ht_control(self, x):
-        # Combined: control_sp_counts.txt
-        # control_oo_counts.txt
-        # control_n2_counts.txt
-        if (re.search('control_oo_counts', x) or \
-            re.search('control_sp_counts', x)):
-            return True
-        return False
-
-    def name_is_a_combined_lt_control(self, x):
-        if re.search('control_n2_counts', x): return True
-        return False
-
+        self.counts_df = self.counts_df.loc[[
+            #((x in all_targets) and (all_targets[x] >= cutoff)) for x in self.counts_df.index]]
+            (x in all_targets)  for x in self.counts_df.index]]
+        
+        print("Kept {0} targets".format(len(self.counts_df.index)))
+        here = set(self.counts_df.index)
+        all_targ = self.targs['sp_both'] | self.targs['oo_both']
+        
+        print("all_targ ", len(all_targ))
+        print("Targets here but not in self.targs: ", here - all_targ)
+        print("Targets in self.targs but not here: ", all_targ - here)
+        self.cts = self.counts_df
+        return self.cts
+    
     def add_sp_oo(self):
         from peaksList import peaksList
         self.gl_pkl = peaksList()
@@ -169,58 +85,7 @@ class heatmapMaker(vennMaker):
         #self.counts_df['SP/OO FC'] = [self.gl_pkl.name_to_fc(x) for \
         #                             x in self.counts_df.index]
 
-    def load_counts_file(self, fname='combined_counts.txt', log_scale=True):
-        self.counts_df = pandas.read_csv(
-            fname, sep='\t', index_col=False)#.head(1000)
-        
-        # We only keep the LT FBF replicates, the combined SP/OO FBF
-        # replicates, and the uncombined LT and HT controls for normalization.
-        to_del = [x for x in self.counts_df.columns if (self.name_is_one_of_11_ht_reps(x) )]
-            #self.name_is_a_combined_ht_control(x) or \
-            #self.name_is_a_combined_lt_control(x))
-                  
-        for x in to_del:
-            del self.counts_df[x]
-            
-        is_rrna = [x for x in self.counts_df.gene if re.match('rrn-\d+.*', x)]
-        
-        self.counts_df.set_index('gene', inplace=True)
-        self.counts_df.drop(is_rrna, inplace=True)
-        self.counts_df = self.to_reads_per_mil(self.counts_df)
-        self.shorten_names_and_subset_columns()
-        self.counts_df = self.subtract_controls(self.counts_df)
-        
-        if log_scale:
-            self.counts_df = self.scale_columns(self.counts_df)
-            
-        self.rm_controls()
-        self.rm_non_target_rnas(only_combined_datasets=True)
-        
-        return self.counts_df
 
-    def rm_non_target_rnas(self, cutoff=1, only_combined_datasets=False):
-        all_targets = collections.defaultdict(int)
-        for k in self.targs:
-            if only_combined_datasets:
-                if ((not re.search('both', k) and (not re.search('old', k)))
-                ):
-                    continue  # Not a combined dataset
-                if k[:3] == 'old':#_fbf1_to_fbf2_n2':
-                    continue  # Only using old_fbf1_to_fbf2_n2
-            if (re.search('control', k)): continue
-            for name in self.targs[k]:
-                all_targets[name] += 1
-        #print k
-        def is_targ(x):
-            if (x in all_targets) and (all_targets[x] >= cutoff): return True
-            else: return False
-        self.counts_df['keep'] = [
-            is_targ(x) for x in self.counts_df.index]
-        self.counts_df = self.counts_df[self.counts_df['keep']]
-        del self.counts_df['keep']
-        print("Kept {0} targets".format(len(self.counts_df.index)))
-        self.cts = self.counts_df
-        return self.cts
 
     def rm_controls(self):
         for k in ['c_sp_1', 'c_n2_1', 'c_oo_1', 'ave_neg']:
@@ -235,41 +100,11 @@ class heatmapMaker(vennMaker):
                    or re.search('control', x) # All controls removed. 
                    )])
         to_del = to_del - combined_controls
-        for x in set(to_del): del self.counts_df[x]
-
-    def shorten_names_and_subset_columns(self):
-        def clean(n):
-            n = re.sub('fbf', 'F', re.sub('rt.*and.*', '', re.sub('exp_', '',
-                    re.sub('control_', 'c_', re.sub('_counts.txt', '',
-                    re.sub('[A-Z]{4}', 'i', n)))
-                          )))
-            n = re.sub('F_sp_', 'SP FBF', n)
-            n = re.sub('F_oo_', 'OO FBF', n)
-            n = re.sub('F1_i', 'LT FBF1', n)
-            n = re.sub('F2_i', 'LT FBF2', n)
-            return n  # 12 FBF + 12 controls
         
-        known = []
-        for i, col in enumerate(self.counts_df.columns):
-            
-            print("\n\n\n\n\n\n\nInput column name: {0}".format(col))
-                  
-            if col == 'ave_neg':
-                known.append(x)
-                continue
-                
-            rep = 1
-            name = clean(col) + '_' + str(rep)
-            
-            while (name in known):
-                rep += 1
-                if rep > 9:
-                    break
-                name = name[:-1] + str(rep)
-            print("----> {0}\n\n\n".format(name))
-            known.append(name)
-            
-        self.counts_df.columns = known
+        for x in set(to_del):
+            del self.counts_df[x]
+
+
             
     def heatmap_counts_file(self, fname=None):
         if fname is not None: self.load_counts_file(fname)

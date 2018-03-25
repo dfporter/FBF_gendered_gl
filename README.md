@@ -78,6 +78,16 @@ Final results:
 python cliputil/score_metrics.py -c auto.ini -p combined_filtered/
 ```
 
+Assigning to genes
+---
+This creates the combined_counts.txt file and the counts/ directories that are used for 
+reads per gene analysis, including DESeq2.
+
+```bash
+python cliputil/assign_to_genes.py --gtf lib/gtf_with_names_column --bed all_bed_collapsed/
+```
+
+
 Supplementary tables
 ---
 

@@ -1,11 +1,5 @@
 
-import pandas
-import os
-import sys
-import collections
-import glob
-import re
-
+import pandas, os, sys, collections, glob, re
 
 top_dir = '/groups/Kimble/Common/fbf_celltype/'  # Server.
 top_dir = '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/combined_filtered/'
@@ -54,7 +48,7 @@ class deseqMaker(object):
             if re.search('and', f): continue
             # Skip the tiny dataset
             if re.search('fbf1_oo_lane2_rt1', f): continue
-            print(f, end=' ') 
+            print(f,) 
             _f = re.sub('exp_fbf1_oo', 'oo-fbf1', f)
             _f = re.sub('exp_fbf2_oo', 'oo-fbf2', _f)
             _f = re.sub('exp_fbf1_sp', 'sp-fbf1', _f)
@@ -201,15 +195,51 @@ class deseqMaker(object):
             _f = re.sub('exp_fbf2_', 'fbf_lt-2', _f)
             to_move.append((f, _f))
         self.cp_files(to_move, indir, outdir)
+        
+    def mk_count_dir_for_deseq_of_lt_fbf1_and_2_vs_ht_fbf_from_combined_counts_file(
+        self, infile='combined_counts.txt', outdir='counts_lt_fbf1_and_2_vs_ht_fbf/'):
+        _mk(outdir)
+        to_move = []
+        
+        print("----")
+        df = pandas.read_csv(infile, sep='\t', index_col=False)
+        
+        out_cols = [
+            'exp_fbf1_CGGA_counts.txt',
+            'exp_fbf1_GGTT_counts.txt',
+            'exp_fbf1_TGGC_counts.txt',
+            'exp_fbf2_CGGA_counts.txt',
+            'exp_fbf2_GGTT_counts.txt',
+            'exp_fbf2_TGGC_counts.txt',
+            'exp_fbf_oo_rt11_and_6_counts.txt',
+            'exp_fbf_oo_rt2_and_13_counts.txt',
+            'exp_fbf_oo_rt9_and1_counts.txt']
+        df.index = df['gene']
+        #df = df[['gene'] + out_cols].copy()
+        print(df)
+        
+        if '_ambiguous' in df.index:
+            print('amb')
+            df.drop('_ambiguous', inplace=True)
+            df.drop('_no_feature', inplace=True)
+            
+        for col in out_cols:
+            to_out_df = df[['gene', col]]
+            
+            _f = re.sub('exp_fbf_oo_', 'fbf_ht-', col)
+            _f = re.sub('exp_fbf1_', 'fbf_lt-1', _f)
+            _f = re.sub('exp_fbf2_', 'fbf_lt-2', _f)
+            
+            to_out_df[col] = [int(x) for x in to_out_df[col]]
+            to_out_df.to_csv(outdir + '/' + _f, sep='\t', index=False, header=False)
 
-import sys
 
 if __name__ == '__main__':
     a = deseqMaker()
     #a.mk_count_dir_for_deseq_of_lt_fbf1_vs_ht_fbf1()
     #a.mk_count_dir_for_deseq_of_lt_fbf1_vs_ht_fbf()
     #a.mk_count_dir_for_deseq_of_lt_fbf2_vs_ht_fbf()
-    #a.mk_count_dir_for_deseq_of_lt_fbf1_and_2_vs_ht_fbf()
+    a.mk_count_dir_for_deseq_of_lt_fbf1_and_2_vs_ht_fbf_from_combined_counts_file()
     #a.mk_count_dir_for_deseq_of_lt_fbf1_vs_fbf2()
     #a.fix_count_filenames_for_deseq_of_sp_vs_oo_clip_11_reps(
     #    indir='counts/', outdir='counts_11_reps/')
@@ -236,24 +266,11 @@ get_res = function(directory) {
         return(resO)
 }
 
-#res_wt = get_res('counts/counts_lt_fbf1_vs_ht_fbf1/')
-#write.table(res_wt, file='tables/lt_fbf1_vs_ht_fbf1_deseq.txt', quote=FALSE, sep='\t')
 
-#res_wt = get_res('counts/counts_lt_fbf2_vs_ht_fbf/')
-#write.table(res_wt, file='tables/lt_fbf2_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
-
-#res_wt = get_res('counts/counts_lt_fbf1_vs_ht_fbf/')
-#write.table(res_wt, file='tables/lt_fbf1_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
-
-#res_wt = get_res('counts/counts_lt_fbf1_and_2_vs_ht_fbf/')
-#write.table(res_wt, file='tables/lt_fbf1_and_2_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
-
-
-#res_wt = get_res('counts_lt_fbf/')
-#write.table(res_wt, file='tables/6_reps_lt_fbf1_vs_fbf2.txt', quote=FALSE, sep='\t')
-
-#res_wt = get_res('counts_11_reps/')
-#write.table(res_wt, file='tables/11_reps_sp_vs_oo.txt', quote=FALSE, sep='\t')
+res_wt = get_res('counts_lt_fbf1_and_2_vs_ht_fbf/')
+write.table(res_wt, file='tables/lt_fbf1_and_2_vs_ht_fbf_deseq.txt', quote=FALSE, sep='\t')
+write.xlsx(res_wt, file='tables/lt_fbf1_and_2_vs_ht_fbf_deseq.xlsx', sheetName = "Sheet1", 
+  col.names = TRUE, row.names = TRUE, append = FALSE)
 
 res_wt = get_res('counts_6_reps/')
 write.table(res_wt, file='tables/6_reps_sp_vs_oo.txt', quote=FALSE, sep='\t')
@@ -262,8 +279,5 @@ write.xlsx(res_wt, "tables/File S4 raw DESeq2 output.xlsx", sheetName = "Sheet1"
   col.names = TRUE, row.names = TRUE, append = FALSE)
   
 
-
-#res_wt = get_res('counts/')
-#write.table(res_wt, file='tables/deseq_vs_noAb.txt', quote=FALSE, sep='\t')
 
 """

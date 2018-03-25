@@ -6,9 +6,7 @@ import sys
 import glob
 import numpy as np
 import collections
-import peaksList
-    
-from peaksList import *
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as scs
@@ -16,41 +14,14 @@ import matplotlib.lines as mlines
 import matplotlib
 from matplotlib_venn import venn2, venn3, venn3_circles
 import matplotlib_venn
-print(matplotlib_venn.__file__)
 
-prefix = '/groups/Kimble/Common/fbf_celltype/combined_filtered/'
-prefix = './combined_filtered/'
+import peaksList
+import figureMaker
+from peaksList import *
 
-
-fname_to_label = {
-prefix + 'old_fbf2.txt': 'old_fbf2',
-prefix + 'old_fbf1.txt': 'old_fbf1',
-prefix + 'oo_both.txt': 'oo_both',
-prefix + 'oo_fbf1.txt': 'oo_fbf1',
-prefix + 'oo_fbf2.txt': 'oo_fbf2',
-prefix + 'sp_both.txt': 'sp_both',
-prefix + 'sp_fbf1.txt': 'sp_fbf1',
-prefix + 'sp_fbf2.txt': 'sp_fbf2',
-prefix + 'old_fbf1_to_fbf2_n2.txt': 'old_fbf1_to_fbf2_n2',
-}
-label_to_fname = dict(zip(fname_to_label.values(), fname_to_label.keys()))
-
-class vennMaker(object):
-
-    def __init__(self, output_dir='figs/'):
-        if not os.path.exists(output_dir): os.system('mkdir ' + output_dir)
-        self.df = {}
-        
-    def load(self, label_to_file):
-        self.df = dict([
-            (k, self.read_csv(v)) for k, v in label_to_file.items()])
-        self.label_to_file = label_to_file
-        self.targs = dict([
-            (k, set(self.df[k]['gene_name'].tolist())) for k in self.df])
-
-    def read_csv(self, fname):
-        return pandas.read_csv(fname, sep='\t', index_col=False)
-
+class vennPainter():
+    """All functions return a venn object and do nothing else.
+    """
     def old_fbf1_vs_fbf2(self, ax):
         a = self.targs['old_fbf1_to_fbf2_n2']
         b = self.targs['old_fbf2']
@@ -120,19 +91,7 @@ class vennMaker(object):
                 '$\mathrm{^{25^\circ C}Oo. FBF}$')
         v_plt = venn2(subsets=(a, b), ax=ax, set_labels=_lab)
         return self.set_venn2_red(v_plt)
-
-    def oo_vs_sp(self, ax):
-        a = self.targs['oo_both']
-        b = self.targs['sp_both']
-        _lab = ('$\mathrm{^{25^\circ C}Oo. FBF}$',
-                '$\mathrm{^{25^\circ C}Sp. FBF}$')
-        v_plt = venn2([a, b], ax=ax, set_labels=_lab)
-        v_plt.get_patch_by_id('10').set_color("r")
-        v_plt.get_patch_by_id('10')._linewidth = 0
-        v_plt.get_patch_by_id('01').set_color('blue') ##75968f
-        v_plt.get_patch_by_id('01')._linewidth = 0
-        return v_plt
-        
+    
     def new_sp_vs_old_fbf(self, ax):
         a = self.targs['old_fbf1_to_fbf2_n2']
         b = self.targs['sp_both']
@@ -173,6 +132,51 @@ class vennMaker(object):
         v_plt.get_patch_by_id('01')._linewidth = 0
         return v_plt
 
+    def venn_combined_programs_vs_sp_oo(self, ax, programs):
+        assert(type(programs)==type(dict()))
+       # all_targ = self.targs['sp_both'] | self.targs['oo_both']
+        _lab = ['SP/OO programs', 'Oo FBF targets', 'Sp FBF targets']
+        v = venn3([
+            set(programs.keys()), self.targs['oo_both'], self.targs['sp_both'], 
+            ], ax=ax, set_labels=_lab)
+        return v
+    
+class vennMaker(figureMaker.figureMaker, vennPainter):
+
+    def oo_vs_sp(self, ax, make_figure=True, look_at_biotypes=True, **kwargs):
+        
+        if ('a' not in kwargs) and ('b' not in kwargs):
+            a, b = (self.targs['oo_both'], self.targs['sp_both'])
+        else:
+            a, b = (kwargs['a'], kwargs['b'])
+            
+        print("---\n{0} RNAs were targets in SP or OO germlines.".format(len(a | b)))
+        print("Among those, {0} were OO only, {1} were SP only, and {2} were shared.\n".format(
+            len(a - b), len(b - a), len(a & b)))
+        
+        if look_at_biotypes:
+            mrna_a = set([name for name in a if self.biotypes.get(name, '') == 'protein_coding'])
+            mrna_b = set([name for name in b if self.biotypes.get(name, '') == 'protein_coding'])
+            print("For mRNA:")
+            self.oo_vs_sp(None, make_figure=False, look_at_biotypes=False, a=mrna_a, b=mrna_b)
+            print('')
+            print("For ncRNA:")
+            self.oo_vs_sp(None, make_figure=False, look_at_biotypes=False, a=a-mrna_a, b=b-mrna_b)
+            print('')
+            
+        if make_figure:
+            
+            _lab = ('$\mathrm{^{25^\circ C}Oo. FBF}$',
+                    '$\mathrm{^{25^\circ C}Sp. FBF}$')
+
+            v_plt = venn2([a, b], ax=ax, set_labels=_lab)
+            v_plt.get_patch_by_id('10').set_color("r")
+            v_plt.get_patch_by_id('10')._linewidth = 0
+            v_plt.get_patch_by_id('01').set_color('blue') ##75968f
+            v_plt.get_patch_by_id('01')._linewidth = 0
+
+            return v_plt
+        
     def programs_vs_combined_sp_oo(self, ax, programs):
         assert(type(programs)==type(dict()))
         all_targ = self.targs['sp_both'] | self.targs['oo_both']
@@ -197,18 +201,8 @@ class vennMaker(object):
         len(sp_prog - all_targ - oo_prog), len(all_targ & oo_prog - sp_prog),
         len(all_targ & sp_prog - oo_prog), len(sp_prog & oo_prog - all_targ),
         len(all_targ & oo_prog & sp_prog)))
-
-
         return v
 
-    def combined_programs_vs_sp_oo(self, ax, programs):
-        assert(type(programs)==type(dict()))
-       # all_targ = self.targs['sp_both'] | self.targs['oo_both']
-        _lab = ['SP/OO programs', 'Oo FBF targets', 'Sp FBF targets']
-        v = venn3([
-            set(programs.keys()), self.targs['oo_both'], self.targs['sp_both'], 
-            ], ax=ax, set_labels=_lab)
-        return v
 
     def heatmap_binary(self):
         _dict = collections.defaultdict(dict)
@@ -224,20 +218,26 @@ class vennMaker(object):
 
 
 if __name__ == '__main__':
+    
     v = vennMaker()
-    v.load(label_to_fname)
+    v.load_peaks_csv_files()
+    
     # Use the peaksList object just to get sp/oo programs.
     pk = peaksList(dataframe=pandas.read_csv(
         'combined_filtered/oo_both.txt', sep='\t', index_col=False))
     pk.read_sp_vs_oo_as_programs()
     programs = pk.programs_as_public_names()
+    
     fig, ax = plt.subplots()
     v.programs_vs_combined_sp_oo(ax, programs)
+    
 #    v.combined_programs_vs_sp_oo(ax[1], programs)
 #    v.oo_vs_sp(ax[2])
     plt.tight_layout()
     plt.savefig('figs/Programs vs targets venn.pdf')
     plt.clf()
+    
+    
     plt.rc('font', size=10)
     fig, ax = plt.subplots(2, 2)
     v.new_oo_vs_old_fbf1(ax[0][0])
@@ -248,6 +248,8 @@ if __name__ == '__main__':
     plt.savefig('Fig 1 venns.pdf')
     plt.clf()
     plt.close()
+    
+    
     plt.rc('font', size=10)
     fig, ax = plt.subplots(2, 3)
     v.old_fbf1_vs_fbf2(ax[0][0])

@@ -1,11 +1,11 @@
 import os
-import ConfigParser
-from peaksList import peaksList
-from volcanoMaker import volcanoMaker
-import gtf
-import rc
-from create_gtf_of_longest_txpt_per_gene import *
-from sbGene import *
+import configparser
+from .peaksList import peaksList
+from .volcanoMaker import volcanoMaker
+from . import gtf
+from . import rc
+from .create_gtf_of_longest_txpt_per_gene import *
+from .sbGene import *
 
 
 def complement(s):
@@ -64,13 +64,13 @@ def load_gtf(lib=None, add_ncrna=False, make_genes_using_peaks_file=None):
         lib = {'gtf': 'lib/gtf_with_names_column.txt',
                'gtf_one_txpt_per_gene': 'lib/gtf_one_txtp_per_gene.txt'}
     if not os.path.exists(lib['gtf_one_txpt_per_gene']):
-        print "Creating a GTF-like of the longest txpt per gene..."
+        print("Creating a GTF-like of the longest txpt per gene...")
         create_gtf_of_longest_txpt_per_gene(
             in_filename=lib['gtf'],
             out_filename=lib['gtf_one_txpt_per_gene'])
-    print "Getting sequences..."
+    print("Getting sequences...")
     (sequences, rc_sequences, chr_lens) = get_sequences(lib)
-    print "Getting GTF..."
+    print("Getting GTF...")
     if make_genes_using_peaks_file is not None:
         g = gtf(lib['gtf'], chr_lens)
         g.sequences = sequences
@@ -123,7 +123,7 @@ def printProgress (
 
 def config(
     filepath="/groups/Kimble/Aman Prasad/redo_fbf/analysis/src/config.ini"):
-    Config = ConfigParser.ConfigParser()
+    Config = configparser.ConfigParser()
     Config.read(filepath)
     lib = ConfigSectionMap('library', Config)
     return lib
@@ -138,7 +138,7 @@ def ConfigSectionMap(section, Config):
             if dict1[option] == -1:
                 DebugPrint("skip: %s" % option)
         except:
-            print("exception on %s!" % option)
+            print(("exception on %s!" % option))
             dict1[option] = None
     return dict1
 

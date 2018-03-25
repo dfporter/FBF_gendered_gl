@@ -509,16 +509,18 @@ def write_excel_of_deseq(df_in, header='SPvOO'):
 
 
 def run():
-    #v = volcanoMaker()
-    #v.gl_rnaseq()
-    #v.read_clip_deseq_csv('tables/6_reps_sp_vs_oo.txt')
-    #v.read_sp_vs_oo_as_programs()
-    #write_excel_of_deseq(v.df.copy(), header='HTvLT')
-    #v.table_of_stats()
+    v = volcanoMaker()
+    v.gl_rnaseq()
+    v.read_clip_deseq_csv('tables/lt_fbf1_and_2_vs_ht_fbf_deseq.txt')
+    v.filter_read_counts(lower_cutoff_average=20)
+    v.read_sp_vs_oo_as_programs()
+    write_excel_of_deseq(v.clipdf.copy(), header='HTvLT')
+    v.table_of_stats()
     #v.volcano_plot(
     #    reverse_x=True,
     #    xlabel='FBF binding: high temperature/low temperature (log2)',
     #    output_name='figs/Fig Sx volcano_of_temp_effect.pdf')
+    print("\n\n\n***SP vs OO***\n\n\n")
     v = volcanoMaker()
     v.gl_rnaseq()
     v.read_clip_deseq_csv('tables/6_reps_sp_vs_oo.txt')

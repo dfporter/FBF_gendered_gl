@@ -1,6 +1,4 @@
-# Python bytecode 2.7 (62211) disassembled from Python 2.7
-# Embedded file name: /opt/rh/python27/root/usr/lib/python2.7/site-packages/cliputil/peaksList.py
-# Compiled at: 2016-08-25 17:30:14
+
 import pandas
 import numpy as np
 import re
@@ -129,10 +127,11 @@ class peaksList(object):
 
     def programs_as_public_names(self):
         self.programs_as_pub_name = {}
+        
         for wbid, prog in self.program.items():
             if wbid in self.wbid_to_name:
-                self.programs_as_pub_name[self.wbid_to_name[wbid]] = \
-                    self.program[wbid]
+                self.programs_as_pub_name[self.wbid_to_name[wbid]] = prog
+                
         return self.programs_as_pub_name
         
     def add_gene_name(self, gtfname):
