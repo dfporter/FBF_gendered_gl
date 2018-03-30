@@ -51,9 +51,17 @@ class translation(object):
         self.map = self.transl
 
     def translate(self, input_id, verbose=False):
-        if verbose: print(("Looking for {a} in a dict with keys like {b}...".format(
+        if verbose:
+            print(("Looking for {a} in a dict with keys like {b}...".format(
             a=input_id, b=list(self.transl.keys())[:3])))
-        if input_id in self.map:
+        
+        if type(input_id) == type(set()):
+            for _id in list(input_id):
+                if _id in self.map:
+                    return self.transl[_id]
+            return set([''])
+    
+        elif input_id in self.map:
             if verbose: print('found')
             return self.transl[input_id]
         else:

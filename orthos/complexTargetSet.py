@@ -31,7 +31,7 @@ class complexTargetSet(targetSet.targetSet):
         
         self.refresh()
         
-        print("\n...Created a complexTargetSet (%s) in language %s:" % (name, language))
+        print("...Created a complexTargetSet (%s) in language %s:" % (name, language))
 
     def stats(self):
         
@@ -51,14 +51,15 @@ class complexTargetSet(targetSet.targetSet):
         self._info = {
             'Number of gene sets': len(self.cgenes),
             'Native language': self.language,
-            'Name': self.name}        
+            'Name': self.name,
+            'Examples of gene sets': list(self.cgenes)[:10]}        
 
     def set_of_all_targets(self, language=None, translator=None):
-        if (language == self.language) or (language == None):
+        if (language == self.language) or (language == None) or (translator is None):
             return set(functools.reduce(lambda a, b: a | b, self.cgenes))
         else:
             translated = [translator.translate(x) for x in self.cgenes if len(translator.translate(x))>0]
-            return set(functools.reduce(lambda a, b: a| b, translated))
+            return set(functools.reduce(lambda a, b: a | b, translated))
                        
     def translatable_cgenes(self, translator):
         targets_with_translations = [
@@ -316,6 +317,12 @@ have a name in {y}. {a}/{i} of this gene set is shared.""".format(
         self.refresh()
         return ' '.join(["complexTargetSet info: ", str(self._info)])
 
+    def cgenes_as_flattened_set(self):
+        _all_genes = set()
+        for aset in self.cgenes:
+            _all_genes |= aset
+        return _all_genes
+    
     def overlap_with_list_of_name_sets(self, list_of_name_sets):
         list_of_name_sets = set([frozenset(x) for x in list_of_name_sets])
         overlappers = collections.defaultdict(list)

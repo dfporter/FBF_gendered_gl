@@ -37,6 +37,30 @@ class figureMaker():
             
         self.df = {}
     
+    def load_peaks_from_excel_file(self):
+        
+        xl = pandas.ExcelFile('../tables/Table S1 Peaks.xls')
+        
+        self.df, self.targs = ({}, {})
+        
+        for sheet_name in xl.sheet_names:
+            print(sheet_name)
+            df = pandas.read_excel(xl, sheetname=sheet_name)
+            self.df[sheet_name] = df.copy()
+            self.targs[sheet_name] = set(df['Gene name'].tolist())
+            
+        self.df['OO FBF (20°C, either FBF)'] = pandas.concat([
+            self.df['OO FBF-1 (20°C)'], self.df['OO FBF-2 (20°C)']])
+        self.targs['OO FBF (20°C, either FBF)'] = set(self.df['OO FBF (20°C, either FBF)']['Gene name'].tolist())
+        
+        both = 'OO FBF (20°C, both FBFs)'
+        self.df[both] = self.df['OO FBF (20°C, either FBF)'].copy()
+        self.df[both] = self.df[both][[
+    ((name in self.targs['OO FBF-1 (20°C)']) and (name in self.targs['OO FBF-2 (20°C)'])) for name in self.df[both]['Gene name']
+        ]]
+        self.targs[both] = set(self.df[both]['Gene name'].tolist())
+        
+        
     def load_peaks_csv_files(self, label_to_file=None):
         """Goes through combined_filtered/ peaks files and loads into self.df as dict.
         Sets self.df (dict of dfs) and self.targs (dict of gene name sets).

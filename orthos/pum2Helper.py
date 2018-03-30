@@ -20,7 +20,7 @@ class pum2Helper():
         return [symb_to_ens_tr.translate(gene_symbol) for gene_symbol in pum2_targets]
 
     @classmethod
-    def pum2_targets_as_ensembl(cls, orthos):
+    def pum2_targets_as_ensembl(cls, orthos=None):
 
         # PUM2 targets.
         pum2_in_ensmbl = cls.pum2_targets_as_list_of_ensmbl_sets()
@@ -29,15 +29,16 @@ class pum2Helper():
         pum2_ensembl_ts = complexTargetSet.complexTargetSet(pum2_in_ensmbl, 'Ensmbl', name='PUM2')
         pum2_ensembl_ts.stats()
         
-        # Get the translator object ortho_cmap (worm locus ID -> Ensmbl) to remove non-translatable.
-        ortho_locus_to_ensmbl, human_ensembl_to_locus_id, ortho_cmap = orthos
+        if orthos is not None:
+            # Get the translator object ortho_cmap (worm locus ID -> Ensmbl) to remove non-translatable.
+            ortho_locus_to_ensmbl, human_ensembl_to_locus_id, ortho_cmap = orthos
 
-        # Human ensmbl <-> worm locus
-        print("Total number of loci in ortholist: {v}. With translation to ESNGxx: {z}.".format(
-            v=len(ortho_locus_to_ensmbl),
-            z=len([x for x in ortho_locus_to_ensmbl if len(ortho_locus_to_ensmbl[x])])))
-        
-        pum2_ensembl_ts.remove_nontranslatable_cgenes(
-            ortho_cmap.get_reverse_translator())
+            # Human ensmbl <-> worm locus
+            print("Total number of loci in ortholist: {v}. With translation to ESNGxx: {z}.".format(
+                v=len(ortho_locus_to_ensmbl),
+                z=len([x for x in ortho_locus_to_ensmbl if len(ortho_locus_to_ensmbl[x])])))
+
+            pum2_ensembl_ts.remove_nontranslatable_cgenes(
+                ortho_cmap.get_reverse_translator())
 
         return pum2_ensembl_ts

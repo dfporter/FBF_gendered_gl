@@ -1,24 +1,17 @@
-from __future__ import division
-import pandas
-import re
-import os
-import sys
-import glob
+import pandas, re, os, collections, sys, glob, matplotlib, matplotlib_venn, importlib
 import numpy as np
-import collections
 
 import matplotlib.pyplot as plt
-import numpy as np
 import scipy.stats as scs
 import matplotlib.lines as mlines
-import matplotlib
 from matplotlib_venn import venn2, venn3, venn3_circles
-import matplotlib_venn
 
 import utils
 import peaksList
 import figureMaker
 from peaksList import *
+
+importlib.reload(figureMaker)
 
 class vennPainter():
     """All functions return a venn object and do nothing else.
@@ -36,9 +29,16 @@ class vennPainter():
         return v_plt
 
     def new_oo_vs_old_fbf(self, ax):
-        a = self.targs['old_fbf1_to_fbf2_n2']
-        b = self.targs['oo_both']
-        c = self.targs['old_fbf2']
+        
+        if 'OO FBF (25°C)' in self.targs:
+            a = self.targs['OO FBF-1 (20°C)']
+            b = self.targs['OO FBF (25°C)']
+            c = self.targs['OO FBF-2 (20°C)']
+        else:
+            a = self.targs['old_fbf1_to_fbf2_n2']
+            b = self.targs['oo_both']
+            c = self.targs['old_fbf2']
+            
         _lab = ('$\mathrm{^{20^\circ C}Oo. FBF}$-$\mathrm{1}$',
                 '$\mathrm{^{25^\circ C}Oo. FBF}$',
                 '$\mathrm{^{20^\circ C}Oo. FBF}$-$\mathrm{2}$')
@@ -84,10 +84,17 @@ class vennPainter():
         return self.set_venn2_red(v_plt)
 
     def new_oo_vs_old_both_fbfs(self, ax):
-        a_1 = self.targs['old_fbf1_to_fbf2_n2']
-        a_2 = self.targs['old_fbf2']
-        a = a_1 & a_2
-        b = self.targs['oo_both']
+        if 'OO FBF (25°C)' in self.targs:
+            #a_1 = self.targs['OO FBF-1 (20°C)']
+            #a_2 = self.targs['OO FBF-2 (20°C)']
+            #a = a_1 & a_2
+            a = self.targs['OO FBF (20°C, both FBFs)']
+            b = self.targs['OO FBF (25°C)']            
+        else:
+            a_1 = self.targs['old_fbf1_to_fbf2_n2']
+            a_2 = self.targs['old_fbf2']
+            a = a_1 & a_2
+            b = self.targs['oo_both']
         _lab = ('$\mathrm{^{20^\circ C}Oo. FBF}$',
                 '$\mathrm{^{25^\circ C}Oo. FBF}$')
         v_plt = venn2(subsets=(a, b), ax=ax, set_labels=_lab)
@@ -144,6 +151,16 @@ class vennPainter():
     
 class vennMaker(figureMaker.figureMaker, vennPainter, utils.translator):
     
+    def top_n_ranks(self, n=500):
+        
+        for list_name, df in self.df.items():
+            print("input {0} {1}".format( list_name, len(df.index)))
+
+            df.drop_duplicates(subset='Gene name', keep='first', inplace=True)
+            self.df[list_name] = df.head(n).copy()
+            print(">", len(self.df[list_name].index))
+            self.targs[list_name] = set(self.df[list_name]['Gene name'].tolist())
+            
     def compare_biotypes_assignments(self):
         all_targs = self.targs['oo_both'] | self.targs['sp_both']
         self.transl()  # utils.translator. Sets self.name_to_biotype dict.

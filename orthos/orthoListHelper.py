@@ -14,7 +14,7 @@ class orthoListHelper():
 
         # Read file into dict of locus ID -> row of data.
         df = pandas.read_csv(fname, sep=',')
-        locus_id_to_row = dict([(re.sub(' ', '', row['Locus ID']), row) for row in df.to_dict('records')])
+        locus_id_to_row = dict([(re.sub(' ', '', row['Common Name']), row) for row in df.to_dict('records')])
         
         # All columns in cols list are in ENSG, or 'Ensmbl' language.
         ensg_cols_of_orthologs = ['Ensembl Compara', 'InParanoid', 'Homologene', 'OrthoMCL']
@@ -22,7 +22,7 @@ class orthoListHelper():
         human_ensembl_to_locus_id = {}
 
         # Initialize a complexTranslation object.
-        complexTransl = language.complexTranslation('Locus ID', 'Ensmbl', {}, max_orthologs=max_orthologs)
+        complexTransl = language.complexTranslation('Common Name', 'Ensmbl', {}, max_orthologs=max_orthologs)
 
         # Populate the complexTranslation object, and a couple dicts for translation.
         for i, (locus_id, row) in enumerate(locus_id_to_row.items()):

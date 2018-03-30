@@ -20,7 +20,7 @@ def clean(fbf_targs):
         fbf_targs['Human ortholog Ensembl IDs'].tolist()]
     
     fbf_targs.replace(to_replace='', value='-', inplace=True)
-    fbf_targs.sort_index(by=['Gene name'], inplace=True)
+    fbf_targs.sort_values(by=['Gene name'], inplace=True)
     
 def write_tab3(fbf_targs, sheet_name=None, writer=None):
 
@@ -38,13 +38,20 @@ def write_tab3(fbf_targs, sheet_name=None, writer=None):
 
     with_pum2_targ = fbf_targs[fbf_targs['pum2 shared']==1]
 
-    with_pum2_targ.to_excel(
-        writer,
-        sheet_name=sheet_name,
-        index=False,
-        columns=tab3_columns
-        )
-    
+    try:
+        with_pum2_targ.to_excel(
+            writer,
+            sheet_name=sheet_name,
+            index=False,
+            columns=tab3_columns
+            )
+    except:
+        with_pum2_targ.to_excel(
+            writer,
+            sheet_name=sheet_name[:25],
+            index=False,
+            columns=tab3_columns
+            )
 def write_excel(fbf_targs, tabs=[1, 2, 3, 4, 5], writer=None):
     
     if not os.path.exists('output/'):

@@ -8,23 +8,28 @@ import targetSet
 
 class fbfTargetSet(complexTargetSet.complexTargetSet):
 
-    def __init__(self, input_filename=None, input_df=None):
+    def __init__(self, targets_object=None, input_filename=None, input_df=None):
         
-        if input_filename is not None:
+        if targets_object is not None:
+            self.fbf_cts = complexTargetSet.complexTargetSet(
+                [frozenset([x]) for x in targets_object.targets],
+                targets_object.language, name='FBF')
+            
+        elif input_filename is not None:
             fbf_ts = self.fbf_from_peaks(input_filename=input_filename)
 
             self.fbf_cts = complexTargetSet.complexTargetSet(
                 [frozenset([x]) for x in fbf_ts.genes], 'Loci', name='FBF')
-
-            self.fbf_cts.stats()
             
-        if input_df is not None:
+        elif input_df is not None:
             if 'transcript_id' in input_df.columns:
                 fbf_targs = set([self.simplify_locus_id(x) for x in input_df.transcript_id])
                 self.fbf_cts = complexTargetSet.complexTargetSet(
                     [frozenset([x]) for x in fbf_targs], 'Loci', name='FBF')
-                self.fbf_cts.stats()
-
+                
+        self.fbf_cts.stats()
+        
+        
     @staticmethod
     def simplify_locus_id(locus_id):
         txpt = locus_id.split('.')
@@ -41,13 +46,17 @@ class fbfTargetSet(complexTargetSet.complexTargetSet):
                  
         return targetSet.targetSet(fbf_targs, 'Loci')
 
-    def annotate_fbf_targs_df(self, pum2_ensembl_ts, orthos, use_this_df=None):
+    def annotate_fbf_targs_df(
+        self, pum2_ensembl_ts, orthos, use_this_df=None, _human_gene_ensmbl_map=None,
+        gtf=None):
         
         ortho_locus_to_ensmbl, human_ensembl_to_locus_id, ortho_cmap = orthos
         
-        human_gene_symbol_to_human_ensmbl, human_ensmbl_to_human_gene_symbol = \
-                                           human_gene_ensmbl_map()
-        
+        if _human_gene_ensmbl_map is None:
+            human_gene_symbol_to_human_ensmbl, human_ensmbl_to_human_gene_symbol = human_gene_ensmbl_map()
+        else:
+            human_gene_symbol_to_human_ensmbl, human_ensmbl_to_human_gene_symbol = _human_gene_ensmbl_map
+            
         if use_this_df is not None:
             df = use_this_df
         else:
@@ -76,8 +85,8 @@ class fbfTargetSet(complexTargetSet.complexTargetSet):
             # PUM2 target symbol -> ENSGs, overlaped with FBF locus ID -> ENSG homolog group.
             # This includes ENSG groups that all both homologs of the FBF locus, but only
             # one of which may be a PUM2 target.
-            pum2_ensg.append(ensg_ids_of_fbf_target_homologs & pum2_targ_set)  
-           
+            pum2_ensg.append(ensg_ids_of_fbf_target_homologs & pum2_targ_set)
+            
             pum2_symbol.append(set())
             for ensg_id in pum2_ensg[-1]:
                 if ensg_id in human_ensmbl_to_human_gene_symbol:
@@ -89,13 +98,15 @@ class fbfTargetSet(complexTargetSet.complexTargetSet):
         
         fbf_targs['PUM2 target HGNC symbol'] = [", ".join(x) for x in pum2_symbol]
 
-        gtf = pandas.read_csv('/opt/lib/gtf_with_names_column.txt', sep='\t')
+        if gtf is None:
+            gtf = pandas.read_csv('/opt/lib/gtf_with_names_column.txt', sep='\t')
 
-        gtf.transcript = [self.simplify_locus_id(x) for x in gtf['transcript_id'].tolist()]
+            gtf.transcript = [self.simplify_locus_id(x) for x in gtf['transcript_id'].tolist()]
 
         loci_to_gene_name = dict(list(zip(gtf.transcript, gtf.gene_name)))
-            
-        fbf_targs['Gene name'] = [loci_to_gene_name[x] for x in fbf_targs['Locus ID'].tolist()]
+        
+        if 'Gene name' not in fbf_targs.columns:
+            fbf_targs['Gene name'] = [loci_to_gene_name.get(x, x) for x in fbf_targs['Locus ID'].tolist()]
         fbf_targs['pum2 shared'] = fbf_targs['shared']
         fbf_targs.drop(['shared'], axis=1, inplace=True)
         fbf_targs['Worm locus ID'] = fbf_targs['Locus ID']
