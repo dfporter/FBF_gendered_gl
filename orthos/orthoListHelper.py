@@ -3,7 +3,8 @@ import numpy as np
 
 import language
 importlib.reload(language)
-
+import simple.ManyToManyTranslator
+importlib.reload(simple.ManyToManyTranslator)
 
 class orthoListHelper():
     
@@ -19,11 +20,12 @@ class orthoListHelper():
         # All columns in cols list are in ENSG, or 'Ensmbl' language.
         ensg_cols_of_orthologs = ['Ensembl Compara', 'InParanoid', 'Homologene', 'OrthoMCL']
         
-        human_ensembl_to_locus_id = {}
+        #human_ensembl_to_locus_id = {}
 
         # Initialize a complexTranslation object.
-        complexTransl = language.complexTranslation('Common Name', 'Ensmbl', {}, max_orthologs=max_orthologs)
+        #complexTransl = language.complexTranslation('Common Name', 'Ensmbl', {}, max_orthologs=max_orthologs)
 
+        input_pairs = []
         # Populate the complexTranslation object, and a couple dicts for translation.
         for i, (locus_id, row) in enumerate(locus_id_to_row.items()):
 
@@ -36,15 +38,32 @@ class orthoListHelper():
                 lambda x, y: ','.join([x, y]), [str(row[col]) for col in ensg_cols_of_orthologs])
             ensg_ids =  [x.replace(' ', '').replace('nan', '') for x in re.split('[ ,]', ensg_ids)]
 
-            for ensg in ensg_ids:
-                human_ensembl_to_locus_id[ensg] = locus_id
+            #for ensg in ensg_ids:
+            #    human_ensembl_to_locus_id[ensg] = locus_id
 
             other_ids |= set(ensg_ids) - set(['NULL', '', '-'])
 
+            input_pairs.append([set([locus_id]), set(other_ids)])
+            #continue
+        translator = simple.ManyToManyTranslator.ManyToManyTranslator(
+            'Common Name', 'Ensmbl')
+        pairs = translator.collapse_list_of_paired_sets(input_pairs)
+        translator.define_mappings_from_list_of_paired_sets(pairs, max_orthologs=max_orthologs)
+        
+        #locus_id_to_row[locus_id] = other_ids
+        skippy_do = """
             if len(other_ids) > 0:
                 complexTransl.add_mapping(frozenset([locus_id]), frozenset(other_ids), verbose=False)
-
-            locus_id_to_row[locus_id] = other_ids
-
-        print(complexTransl.info())
-        return locus_id_to_row, human_ensembl_to_locus_id, complexTransl
+                if locus_id in ['fbf-1', 'puf-11', 'fbf-2']:
+                    print("locus_id:", locus_id)
+                    print("other_ids:", other_ids)
+                    print('complexTransl.translate(locus_id)', complexTransl.translate(locus_id))
+                    complexTransl.reverse_transl = dict([
+                        (frozenset(complexTransl.transl[k]), frozenset(k)) for k in complexTransl.transl
+                    ])
+                    print('complexTransl.translate(other_ids, reverse=True)',
+                         complexTransl.translate(other_ids, reverse=True))
+            
+        """
+#        print(complexTransl.info())
+        return translator#locus_id_to_row, human_ensembl_to_locus_id, complexTransl

@@ -84,7 +84,7 @@ class complexTargetSet(targetSet.targetSet):
         for index1, genes1 in enumerate(list(self.cgenes)):
             transl1 = translator.translate(genes1, multiple_homologs_in_native_language_possible=False)
 
-            new_cgenes[index1] = new_cgenes[index1] | genes1
+            new_cgenes[index1] |= genes1
 
             if len(transl1) == 0:
                 continue
@@ -103,10 +103,14 @@ class complexTargetSet(targetSet.targetSet):
             len(self.cgenes), len(set.union(*[set(x) for x in self.cgenes]))))
         
         # Denote a representative for each set.
-        # Make a lookup table to find the representative.
+        # Make a lookup table to find the representative:
         self.all_input_cgenes_to_representative = {}
+        # Reverse lookup table:
+        self.representative_to_input_cgenes = collections.defaultdict(set)
+        
         reps = []
         for _set in new_cgenes:
+            
             if type(_set) != type(set()):
                 print("???????")
                 input()
@@ -122,10 +126,12 @@ class complexTargetSet(targetSet.targetSet):
 
                 for item in _list:
                     self.all_input_cgenes_to_representative[item] = rep
+                    self.representative_to_input_cgenes[rep].add(item)
                     
             else:
                 rep = random.sample(_set, 1)[0]
                 self.all_input_cgenes_to_representative[rep] = rep
+                self.representative_to_input_cgenes[rep].add(rep)
                 
             reps.append(rep)
         
@@ -134,12 +140,28 @@ class complexTargetSet(targetSet.targetSet):
         
         print("After collapse: {0}  IDs (unflattened), {1} (flattened)".format(
             len(self.cgenes), len(set.union(*[set(x) for x in self.cgenes]))))
-        
-    def overlap_with_complexTargetSet(self, cts, translator, verbose=False):
+    
+    @staticmethod
+    def all_b_target_ids_in_lang_b(cts, translator):
+        b_targets_with_translations = [x for x in cts.cgenes if (len(translator.translate(x, reverse=True))>0)]
+        all_b_target_ids_in_lang_b = set.union(*[set(x) for x in b_targets_with_translations])
+        return all_b_target_ids_in_lang_b
+    
+    @staticmethod
+    def b_targets_with_translations(cts, translator):
+        return [x for x in cts.cgenes if (len(translator.translate(x, reverse=True))>0)]
+    
+    def overlap_with_complexTargetSet(
+        self, cts, translator, verbose=False,
+        human_ensmbl_to_human_gene_symbol=None, # For the sets_table only, if given.
+        pum_targ_gene_symbols=None, # For the sets_table only, if given.
+    ):
         """Translate set of frozensets <-> set of frozensets.
         translator is complexTranslation object.
         """
         translator.refresh()
+        
+        sets_table = []
         
         if verbose:
             print("This complexTargetSet has {0} IDs of the form: {1}".format(
@@ -148,9 +170,12 @@ class complexTargetSet(targetSet.targetSet):
             print("It's info is:")
             print(self.info())
 
+        # self.cgenes only has representatives after combine_targets_based_on_homology() called.
         a_targets_with_translations = [x for x in self.cgenes if (len(translator.translate(x))>0)]
         b_targets_with_translations = [x for x in cts.cgenes if (len(translator.translate(x, reverse=True))>0)]
         
+        # If combine_targets_based_on_homology() called, all_a_targets_with_translations_in_language_a
+        # has only representative IDs.
         all_a_targets_with_translations_in_language_a = set.union(*[set(x) for x in a_targets_with_translations])
         all_b_target_ids_in_lang_b = set.union(*[set(x) for x in b_targets_with_translations])            
         
@@ -182,17 +207,61 @@ all_b_target_ids in lang b (flattened): {12}, ex: "{13}"
         targs_including_non_representatives = set.union(*_)
         
         # For each set of a_language_ids_with_translations (superset of targets).
-        for frznset_lang_a, frznset_lang_b in list(translator.transl.items()):  
+        for frznset_lang_a, frznset_lang_b in list(translator.transl.items()):
+
+            row = {}  # For sets_table.
             
+            # Overlap between representatives and this set in language A.
+            # targs_in_set must have length one since its overaping representatives.
             targs_in_set = frznset_lang_a & all_a_targets_with_translations_in_language_a
             
+            # The overlap between all lang A ids in this group and all lang A ids in the
+            # input cgenes. This would include non-translatable cgenes if 
+            # remove_nontranslatable_cgenes() were not called.
             targs_including_non_representatives_in_set = set(frznset_lang_a & targs_including_non_representatives)
+            if 'fbf-1' in frznset_lang_a:
+                print("frznset_lang_a", frznset_lang_a)
+                print("targs_including_non_representatives_in_set:", targs_including_non_representatives_in_set)
+                print("targs_in_set:", targs_in_set)
+                print("self.representative_to_input_cgenes[random.sample(targs_in_set, 1)[0]]",
+                     self.representative_to_input_cgenes[
+                    random.sample(targs_in_set, 1)[0]])
+            row['FBF targets'] = targs_including_non_representatives_in_set
             
+            row['Translations'] = set()
+            row['Translations'] |= frznset_lang_b
+            row['PUM2 targets'] = set()
+            row['PUM2 targets'] |= frznset_lang_b & all_b_target_ids_in_lang_b
+            
+            row['Human Gene symbols of translation'] = set()
+            row['Human Gene symbols of PUM2 targets'] = set()
+            row['Human Gene symbols of homologs of PUM2 targets'] = set()
+
+            if len(targs_in_set):
+                row['Test: FBF targets from rep->items'] = self.representative_to_input_cgenes[
+                    random.sample(targs_in_set, 1)[0]]
+            else:
+                row['Test: FBF targets from rep->items'] = set()
+                
+            if human_ensmbl_to_human_gene_symbol is not None:
+                
+                for lang_b_id in list(frznset_lang_b):
+                    row['Human Gene symbols of translation'].add(human_ensmbl_to_human_gene_symbol.get(
+                        lang_b_id, ''))
+                row['Human Gene symbols of PUM2 targets'] = row[
+                    'Human Gene symbols of translation'] & pum_targ_gene_symbols
+                    
             # Annotate every cgene, including non_representatives.
             for targ in targs_including_non_representatives_in_set:
 
                 self.annotated_cgenes[targ]['translations'] = frznset_lang_b
                 self.annotated_cgenes[targ]['a_names'] = targ    
+                
+                if human_ensmbl_to_human_gene_symbol is not None:
+                    for lang_b_id in list(frznset_lang_b & all_b_target_ids_in_lang_b):
+                        row['Human Gene symbols of homologs of PUM2 targets'
+                           ].add(human_ensmbl_to_human_gene_symbol.get(lang_b_id, ''))
+                        
                 
                 if len(frznset_lang_b & all_b_target_ids_in_lang_b) > 0:
                     self.annotated_cgenes[targ]['a_target'] = 1
@@ -217,10 +286,12 @@ all_b_target_ids in lang b (flattened): {12}, ex: "{13}"
                 else:
                     table['not_a_or_b_target'] += 1
 
+            if len(frznset_lang_b & all_b_target_ids_in_lang_b) or len(targs_in_set):
+                sets_table.append(row)
         
         print(table)
         self.fisher_table(table)
-        return table
+        return table, sets_table
         nope = '''
         for frznset in b_language_ids_with_translations:
             #a_set = translator.translate(frznset, reverse=True)

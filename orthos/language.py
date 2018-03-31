@@ -74,6 +74,7 @@ def is_set_or_list(k):
            or (type(k) == type(frozenset([]))))
 
 
+    
 class complexTranslation(object):
     """
     self.transl (dict): {frozenset a} -> {frozenset b}
@@ -152,6 +153,14 @@ class complexTranslation(object):
         
         return not_too_many
     
+    def define_mappings_from_list_of_paired_sets(
+        self, list_of_paired_sets, max_orthologs=5):
+        for (seta, setb) in list_of_paired_sets:
+            if (len(seta)>max_orthologs) or (len(setb)>max_orthologs):
+                continue
+            self.transl[frozenset(seta)] = frozenset(setb)
+            self.reverse_transl[frozenset(setb)] = frozenset(seta)
+            
     def add_mapping(
             self, set_translate_from, set_translate_to, 
             multiple_homologs_in_native_language_possible=True, verbose=False):
@@ -204,10 +213,38 @@ class complexTranslation(object):
         for frozen_set_lang_a in del_from_a:
             del self.transl[frozen_set_lang_a]
 
+    @staticmethod
+    def collapse_list_of_paired_sets(_t):
+        collapsed = []
+        
+        def update_row(a, b, row):
+            if a & row[0]:
+                collapsed[n][0] |= a
+                collapsed[n][1] |= b
+                return True
+            elif b & row[1]:
+                collapsed[n][0] |= a
+                collapsed[n][1] |= b
+                return True
+            return False
+                
+        for _a, _b in _t:
+            
+            found = False
+            
+            for n, _row in enumerate(collapsed):
+                if (not found) and update_row(_a, _b, _row):
+                    found = True
+                if found:
+                    break
+            
+            if not found:
+                collapsed.append([_a, _b])
+            
+        return collapsed
     def refresh(self):
         self.remove_untranslatable()
-        self.reverse_transl = dict([
-            (frozenset(self.transl[k]), frozenset(k)) for k in self.transl])
+        
         self._info = {
             'Name': self.name,
             'gene sets a': len(self.transl),
@@ -244,6 +281,9 @@ class complexTranslation(object):
         # input_id is frozenset
         if type(input_id) == type(''):
             input_id = frozenset([input_id])
+            
+        if verbose:
+            print('looking for ', input_id)
             
         translates_to = set([])
         if not reverse:
