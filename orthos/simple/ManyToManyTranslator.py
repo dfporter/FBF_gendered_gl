@@ -91,47 +91,47 @@ class ManyToManyTranslator(object):
             if has_overlaps:
                 _t[n1] |= _t[n2]
                 del _t[n2]
-                
+        
         print("Collapsed a list of sets to length {0}.".format(len(_t)))
         return _t
     
     @staticmethod
     def collapse_list_of_paired_sets(_t):
+        print("Collapsing a list of paired sets, len {0}".format(len(_t)))
         collapsed = []
         
-        def update_row(a, b, row):
-            if a & row[0]:
-                collapsed[n][0] |= a
-                collapsed[n][1] |= b
-                return True
-            elif b & row[1]:
-                collapsed[n][0] |= a
-                collapsed[n][1] |= b
+        def update_row(a, b, row, listindex):
+            if (a & row[0]) or (b & row[1]):
+                collapsed[listindex][0] |= a
+                collapsed[listindex][1] |= b
                 return True
             return False
                 
-        for _a, _b in _t:
+        for (_a, _b) in _t:
             
             found = False
             
             for n, _row in enumerate(collapsed):
-                if (not found) and update_row(_a, _b, _row):
+                if update_row(_a, _b, _row, n):
                     found = True
-                if found:
-                    break
+                #if found:
+                #    break
             
             if not found:
                 collapsed.append([_a, _b])
             
+        print("Collapsed to len {0}".format(len(collapsed)))
         return collapsed
     
     def translate_list(self, _list, **kwargs):
-        if ('reverse' not in kwargs) or (not kwargs['reverse']):
-            print("Translating list of length {0} from {1} to {2}".format(
-                len(_list), self.input_name, self.output_name))
-        else:
-            print("Translating list of length {0} from {1} to {2}".format(
-                len(_list), self.output_name, self.input_name))
+        
+        if 'verbose' in kwargs and (kwargs['verbose']):
+            if ('reverse' not in kwargs) or (not kwargs['reverse']):
+                print("Translating list of length {0} from {1} to {2}".format(
+                    len(_list), self.input_name, self.output_name))
+            else:
+                print("Translating list of length {0} from {1} to {2}".format(
+                    len(_list), self.output_name, self.input_name))
         
         output = []
         for n, item in enumerate(_list, start=1):

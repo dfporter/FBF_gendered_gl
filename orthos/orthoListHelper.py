@@ -1,8 +1,6 @@
 import pandas, os, re, sys, importlib, random, functools
 import numpy as np
 
-import language
-importlib.reload(language)
 import simple.ManyToManyTranslator
 importlib.reload(simple.ManyToManyTranslator)
 
@@ -15,19 +13,14 @@ class orthoListHelper():
 
         # Read file into dict of locus ID -> row of data.
         df = pandas.read_csv(fname, sep=',')
-        locus_id_to_row = dict([(re.sub(' ', '', row['Common Name']), row) for row in df.to_dict('records')])
+        name_to_row = dict([(re.sub(' ', '', row['Common Name']), row) for row in df.to_dict('records')])
         
         # All columns in cols list are in ENSG, or 'Ensmbl' language.
         ensg_cols_of_orthologs = ['Ensembl Compara', 'InParanoid', 'Homologene', 'OrthoMCL']
         
-        #human_ensembl_to_locus_id = {}
-
-        # Initialize a complexTranslation object.
-        #complexTransl = language.complexTranslation('Common Name', 'Ensmbl', {}, max_orthologs=max_orthologs)
-
         input_pairs = []
         # Populate the complexTranslation object, and a couple dicts for translation.
-        for i, (locus_id, row) in enumerate(locus_id_to_row.items()):
+        for i, (worm_name, row) in enumerate(name_to_row.items()):
 
             if not(i % 1e3):
                 print('Reading ortholist file, line: ', i)
@@ -38,32 +31,26 @@ class orthoListHelper():
                 lambda x, y: ','.join([x, y]), [str(row[col]) for col in ensg_cols_of_orthologs])
             ensg_ids =  [x.replace(' ', '').replace('nan', '') for x in re.split('[ ,]', ensg_ids)]
 
-            #for ensg in ensg_ids:
-            #    human_ensembl_to_locus_id[ensg] = locus_id
-
             other_ids |= set(ensg_ids) - set(['NULL', '', '-'])
 
-            input_pairs.append([set([locus_id]), set(other_ids)])
-            #continue
+            input_pairs.append([set([worm_name]), set(other_ids)])
+
         translator = simple.ManyToManyTranslator.ManyToManyTranslator(
             'Common Name', 'Ensmbl')
         pairs = translator.collapse_list_of_paired_sets(input_pairs)
+        
+        #worm_names = translator.expand_list_of_sets_to_include_all_in_group(
+        #    [x[0] for x in pairs], [x[1] for x in pairs])
+        #ensg = translator.expand_list_of_sets_to_include_all_in_group(
+        #    [x[1] for x in pairs], [x[0] for x in pairs])
+#        translator.define_mappings_from_list_of_paired_sets(pairs, max_orthologs=max_orthologs)
+
+#        pairs = zip(worm_names, ensg)
+        reverse_pairs = [[x[1], x[0]] for x in pairs]
+        reverse_pairs = translator.collapse_list_of_paired_sets(reverse_pairs)
+        pairs = [[x[1], x[0]] for x in reverse_pairs]
+
         translator.define_mappings_from_list_of_paired_sets(pairs, max_orthologs=max_orthologs)
         
-        #locus_id_to_row[locus_id] = other_ids
-        skippy_do = """
-            if len(other_ids) > 0:
-                complexTransl.add_mapping(frozenset([locus_id]), frozenset(other_ids), verbose=False)
-                if locus_id in ['fbf-1', 'puf-11', 'fbf-2']:
-                    print("locus_id:", locus_id)
-                    print("other_ids:", other_ids)
-                    print('complexTransl.translate(locus_id)', complexTransl.translate(locus_id))
-                    complexTransl.reverse_transl = dict([
-                        (frozenset(complexTransl.transl[k]), frozenset(k)) for k in complexTransl.transl
-                    ])
-                    print('complexTransl.translate(other_ids, reverse=True)',
-                         complexTransl.translate(other_ids, reverse=True))
-            
-        """
-#        print(complexTransl.info())
-        return translator#locus_id_to_row, human_ensembl_to_locus_id, complexTransl
+        print("Finished making ortholist translator (worm names <-> human ENSG).")
+        return translator
