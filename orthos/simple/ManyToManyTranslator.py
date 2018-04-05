@@ -1,4 +1,4 @@
-
+import collections
 
 class ManyToManyTranslator(object):
     """
@@ -23,6 +23,7 @@ class ManyToManyTranslator(object):
     
     def define_mappings_from_one_to_one_list(
             self, list_of_paired_ids):
+        
         for (seta, setb) in list_of_paired_ids:
             self.transl[frozenset([seta])] = frozenset([setb])
             self.reverse_transl[frozenset([setb])] = frozenset([seta])
@@ -95,33 +96,76 @@ class ManyToManyTranslator(object):
         print("Collapsed a list of sets to length {0}.".format(len(_t)))
         return _t
     
+    @classmethod
+    def collapse_list_of_paired_sets(cls, _t, verbose=False):
+        
+        print("Collapsing a list of paired sets, length {0}.".format(len(_t)))
+        
+        done_collapsing = False
+        iterations = 1
+        while not done_collapsing:
+            print("On iteration {0}.".format(iterations))
+            done_collapsing, _t = cls.run_through_to_collapse(_t, verbose=verbose)
+            iterations += 1
+        print("Fully collapsed.")
+        return _t
+    
     @staticmethod
-    def collapse_list_of_paired_sets(_t):
-        print("Collapsing a list of paired sets, len {0}".format(len(_t)))
+    def run_through_to_collapse(_t, verbose=False):
+        
+        fully_collapsed = True
         collapsed = []
         
-        def update_row(a, b, row, listindex):
-            if (a & row[0]) or (b & row[1]):
-                collapsed[listindex][0] |= a
-                collapsed[listindex][1] |= b
-                return True
-            return False
-                
+        all_a_items, all_b_items = (set(), set()) 
+        
+        updated_rows = collections.defaultdict(int)  # For QC.
+        
         for (_a, _b) in _t:
             
-            found = False
-            
-            for n, _row in enumerate(collapsed):
-                if update_row(_a, _b, _row, n):
-                    found = True
-                #if found:
-                #    break
-            
-            if not found:
+            if (_a & all_a_items) or (_b & all_b_items):
+                
+                hits = []
+                
+                for n, _row in enumerate(collapsed):
+                    if (_a & collapsed[n][0]) or (_b & collapsed[n][1]):
+                        collapsed[n][0] |= _a
+                        collapsed[n][1] |= _b
+                        hits.append(collapsed[n])
+                
+                if len(hits) != 1:
+                    fully_collapsed = False
+                    #print("error for row {0}".format([_a, _b]))
+                    #print("{0} hits".format(len(hits)))
+                    
+            else:
                 collapsed.append([_a, _b])
+                
+            all_a_items |= _a
+            all_b_items |= _b
             
-        print("Collapsed to len {0}".format(len(collapsed)))
-        return collapsed
+        # The following is all quality control.
+        print("Collapsed to length {0}".format(len(collapsed)))
+        print("There were {0} unique items in the first position, and {1} in the second.".format(
+            len(all_a_items), len(all_b_items)))
+        
+        collapsed_a_items = set()
+        collapsed_b_items = set()
+        for (_a, _b) in _t:
+            collapsed_a_items |= _a
+            collapsed_b_items |= _b
+            
+        print("After collapse, there were {0} and {1} items. (Should be the same.)".format(
+            len(collapsed_a_items), len(collapsed_b_items)))
+        
+        lost_a = all_a_items - collapsed_a_items
+        lost_b = all_b_items - collapsed_b_items
+        
+        if len(lost_a):
+            print("Erroneously lost the following from A:".format(lost_a))
+        if len(lost_b):
+            print("Erroneously lost the following from B:".format(lost_b))    
+
+        return fully_collapsed, collapsed
     
     def translate_list(self, _list, **kwargs):
         

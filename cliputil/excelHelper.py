@@ -158,7 +158,7 @@ class excelHelper():
 
         return re.sub('[a-z]$', '', locus_id)
     
-    def read_mart_export(self):
+    def read_mart_export(self, use_col):
         self.trxpt_to_desc = {}
         with open('/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/mart_export.txt') as f:
             for li in f:

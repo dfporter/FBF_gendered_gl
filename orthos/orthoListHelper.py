@@ -39,15 +39,17 @@ class orthoListHelper():
             'Common Name', 'Ensmbl')
         pairs = translator.collapse_list_of_paired_sets(input_pairs)
         
-        #worm_names = translator.expand_list_of_sets_to_include_all_in_group(
-        #    [x[0] for x in pairs], [x[1] for x in pairs])
-        #ensg = translator.expand_list_of_sets_to_include_all_in_group(
-        #    [x[1] for x in pairs], [x[0] for x in pairs])
-#        translator.define_mappings_from_list_of_paired_sets(pairs, max_orthologs=max_orthologs)
 
-#        pairs = zip(worm_names, ensg)
         reverse_pairs = [[x[1], x[0]] for x in pairs]
-        reverse_pairs = translator.collapse_list_of_paired_sets(reverse_pairs)
+        _reverse_pairs = translator.collapse_list_of_paired_sets(reverse_pairs)
+        
+        print("After performing the list collapsing function on the reversed pairs, the following")
+        print(" were removed:")#.format(set(reverse_pairs)-set(_reverse_pairs)))
+        for _l in reverse_pairs:
+            if _l in _reverse_pairs:
+                pass
+            else:
+                print(_l, ' was removed.')
         pairs = [[x[1], x[0]] for x in reverse_pairs]
 
         translator.define_mappings_from_list_of_paired_sets(pairs, max_orthologs=max_orthologs)
