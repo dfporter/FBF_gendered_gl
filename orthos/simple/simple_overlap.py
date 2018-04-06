@@ -119,7 +119,8 @@ def simple_overlap(linguist, name='', col1='', col2='', verbose=False):
             #print(stats_homologs_uncollapsed)
             #break
 
-        
+    #for k,v in stats_homologs_collapsed.items():
+    #    print(k, v)
 #    df = pandas.DataFrame(stats)
     #ov = simple.overlapDictInfo.overlapDictInfo()
     #df_of_sets, stats_dict = ov.add_info(name, df, targs1, targs2)
