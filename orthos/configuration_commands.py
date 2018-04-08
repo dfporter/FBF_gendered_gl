@@ -2,6 +2,7 @@ config_text = """
 ortholist=lib/OrthoList_20130531.csv
 
 #-----------
+
 test1=[<
     filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/test1.txt
     language=gene_name
@@ -19,7 +20,9 @@ test2=[<
     read_every_line_as_gene=True
     capitalize=True
     >]
+
 #-----------
+
 FbfOO25C=[<
     filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S1 Peaks.xls
     language=gene_name
@@ -126,7 +129,9 @@ BlockIII=[<
     sheetnames=Block III
     column_name=Gene name
     >]
+
 #-----------
+
 Hafner=[<
     filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/orthos/lib/pum2_targets.txt
     language=Gene symbol
