@@ -142,6 +142,17 @@ Hafner=[<
 
 #-----------
 
+gld1_raj=[<
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/orthos/lib/gld1_raj.xlsx
+    language=Gene symbol
+    species=worm
+    load_sheets_of_excel=True
+    column_name=Gene name
+    sheetnames=NIHMS339375-supplement-02
+    >]
+    
+#-----------
+
 Lin_pum1=[<
     filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/orthos/lib/supp_gad.298752.117_SUPPLEMENTAL_Table2sites.xlsx
     load_sheets_of_excel=True

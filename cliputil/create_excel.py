@@ -11,25 +11,31 @@ import excelHelper
 
 
 def _mk(t):
+
     if os.path.isfile(t):
         t = os.path.dirname(t)
+
     if not os.path.exists(t):
         os.system('mkdir ' + t)
 
 
 def normalize_to_rna_seq(df):
+
     ortiz_min = min([x for x in df.rna_seq_oo if x > 0])
     rpkm_min = min([x for x in df['RNA abundance'].tolist() if x > 0])
     modencode_min = min([x for x in df.rna_seq_modencode if x > 0])
+
     ortiz_norm = [float(t[0])/float(max([t[1], ortiz_min])) for t in zip(df.height, df.rna_seq_oo)]
     ortiz_rpkm_norm = [float(t[0])/float(max([t[1], rpkm_min])) for t in zip(df.height, df['RNA abundance'].tolist())]
     modencode_norm = [float(t[0])/float(max([t[1], modencode_min])) for t in zip(df.height, df.rna_seq_modencode)]
+
     df['Peak height/RNA abundance (RPKM for oogenic germlines, Ortiz et al.)'] = ortiz_rpkm_norm
     df['Peak height/RNA abundance (Max RNA coverage for oogenic germlines, Ortiz et al.)'] = ortiz_norm
     df['Peak height/RNA abundance (Max RNA coverage for whole worms, modencode (Acc. 4594))'] = modencode_norm
 
 
 def in_a_not_in_b(a, b, min_height=50):
+	
     robust_a = a[a['height']>min_height].copy()
     #print a['height'].value_counts()
     print("{0}/{1} peaks above {2} height...".format(
@@ -132,10 +138,11 @@ if len(reads.index) == 0:
     sys.exit()
 print(reads)
 
-import collections
+
 def count_coding(x):
     if x == 'protein_coding': return 1
     else: return 0
+
 def count_fbe(x):
     try:
         if x == 1: return 1

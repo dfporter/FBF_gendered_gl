@@ -34,7 +34,7 @@ class targets():
             for sheetname in self.sheetnames:
                 df = pandas.read_excel(
                     self.fname, index_col=False, sheetname=sheetname)
-            
+                
                 if self.instructed('subset', config):
                     print("Before running rule ", len(df.index))
                     

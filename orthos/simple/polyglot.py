@@ -1,4 +1,4 @@
-import pandas, functools, collections, re, importlib
+import pandas, functools, collections, re, importlib, random
 
 import orthoListHelper
 import human_gene_ensmbl_map
@@ -17,6 +17,22 @@ class polyglot():
             new_col.append(_id & targ_set)
         self.df[col_name] = new_col
 
+    def add_a_column_of_random_targets(self, language, n_to_pick=100, col_name='random'):
+        
+        genes = self.df[language].tolist()
+        n_genes = len(genes)
+        
+        picked_genes = set()
+        while len(picked_genes) <= n_to_pick:
+            sample = random.sample(range(0, n_genes), 1)[0]
+            picked_genes |= genes[sample]
+        
+        new_col = []
+        for _id in genes:
+            new_col.append(_id & picked_genes)
+            
+        self.df[col_name] = new_col
+        
     @staticmethod
     def make_polyglot_file(config):
 

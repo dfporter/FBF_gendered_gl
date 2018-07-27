@@ -10,7 +10,6 @@ import collections
 prefix = '/groups/Kimble/Common/fbf_celltype/combined_filtered/'
 prefix = './combined_filtered/'
 
-
 fname_to_label = {
 prefix + 'old_fbf2.txt': 'old_fbf2',
 prefix + 'old_fbf1.txt': 'old_fbf1',
@@ -37,9 +36,9 @@ class figureMaker():
             
         self.df = {}
     
-    def load_peaks_from_excel_file(self):
+    def load_peaks_from_excel_file(self, excel_fname='../tables/Table S1 Peaks.xls'):
         
-        xl = pandas.ExcelFile('../tables/Table S1 Peaks.xls')
+        xl = pandas.ExcelFile(excel_fname)
         
         self.df, self.targs = ({}, {})
         
@@ -67,7 +66,7 @@ class figureMaker():
         """
         
         if label_to_file is None:
-            pass#self.label_to_file = self.label_to_fname
+            self.label_to_file = self.label_to_fname
         else:
             self.label_to_file = label_to_file
         

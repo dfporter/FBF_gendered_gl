@@ -21,17 +21,22 @@ seqs = {}
 topseqs = {}
 for fname in glob.glob('combined_filtered/*'):
     f = re.sub('\.txt', '', os.path.basename(fname))
+
     dfs[f] = pandas.read_csv(fname, sep='\t')
+    if ('biotype' not in dfs[f].columns) or ('height' not in dfs[f].columns):
+        continue
+
     dfs[f] = dfs[f][dfs[f]['biotype']=='protein_coding']
+
     dfs[f]['height'] = dfs[f]['exp_reads']
-    dfs[f].sort(columns=['height'], inplace=True, ascending=False)
+    dfs[f].sort_index(by=['height'], inplace=True, ascending=False)
     tups = zip(dfs[f]['gene_name'], dfs[f].index, dfs[f]['seq'].tolist())
     seqs[f] = [">{0}__{1}\n{2}\n".format(a, b, c) for a, b, c in tups]
     topseqs[f] = seqs[f][:min(len(seqs[f]), 500)]
     seqs[f] = "".join(seqs[f])
     topseqs[f] = "".join(topseqs[f])
     # Write.
-    print topseqs[f]
+    print(topseqs[f])
     with open('fasta/{0}.fa'.format(f), 'w') as fh:
         fh.write(seqs[f])
     with open('fasta/top500/{0}.fa'.format(f), 'w') as fh:

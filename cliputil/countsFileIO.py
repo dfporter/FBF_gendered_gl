@@ -110,7 +110,7 @@ class countsFileIO(countsColumnsNaming.countsColumnsNaming):
                 self.counts_df = self.scale_columns(self.counts_df)
 
             self.rm_controls()
-
+        
         return self.counts_df
     
     def to_reads_per_mil(self, df):

@@ -26,9 +26,9 @@ Annotate the */*/null_hyp_4.txt files with reads,
  ```
  
 """
-from __init__ import *
-import add_reads_to_peaks
-from peaks import *
+from .__init__ import *
+from . import add_reads_to_peaks
+from .peaks import *
 
 
 class peakSet(object):
@@ -90,10 +90,10 @@ def filename_and_label_mappings():
 }
     
     label_to_unfiltered_output_file = dict([
-        (x, '{0}/{1}.txt'.format(unfiltered, x)) for x in fname_to_label.values()])
+        (x, '{0}/{1}.txt'.format(unfiltered, x)) for x in list(fname_to_label.values())])
         
     label_to_filtered_output_file = dict([
-        (x, '{0}/{1}.txt'.format(filtered, x)) for x in fname_to_label.values()])
+        (x, '{0}/{1}.txt'.format(filtered, x)) for x in list(fname_to_label.values())])
         
     for x in [unfiltered, filtered]:
         if not os.path.exists(x):
@@ -107,6 +107,8 @@ def run(args):
     (unfiltered, filtered, fname_to_label, label_to_unfiltered_output_file,
      label_to_filtered_output_file) = filename_and_label_mappings()
      
+    # For the null_hyp_4.txt files found in args.input, make peaks objects, add bedgraph data,
+    # and return a list of the peaks objects.
     peak_objs = add_reads_to_peaks.run(args)
     
     # Clean.
@@ -122,22 +124,22 @@ def run(args):
         _p.write_table('test.txt')
         
         if os.path.realpath(_p.file) not in fname_to_label:
-            print "{0} not in fname_to_label {1}.".format(_p.file, fname_to_label)
+            print("{0} not in fname_to_label {1}.".format(_p.file, fname_to_label))
             continue
         
         _p.label = fname_to_label[os.path.realpath(_p.file)]
         
-        print _p.file
-        print os.path.realpath(_p.file)
-        print " .____. "
-        print _p.label
+        print(_p.file)
+        print(os.path.realpath(_p.file))
+        print(" .____. ")
+        print(_p.label)
         
         _p.write_table(label_to_unfiltered_output_file[_p.label])
 
     for _p in peak_objs:
         
         if not hasattr(_p, 'label'):
-            print "Skipping the generation of a filtered {0}, as it has no label attr".format(str(_p))
+            print("Skipping the generation of a filtered {0}, as it has no label attr".format(str(_p)))
             continue
         
         #filt_p = _p.get_filtered_obj(col='unnorm_ratio', cutoff=10)
@@ -148,7 +150,7 @@ def run(args):
 
 def read_dir(dirname):
     
-    print dirname
+    print(dirname)
     
     (unfiltered, filtered, fname_to_label, label_to_unfiltered_output_file,
      label_to_filtered_output_file) = filename_and_label_mappings()
@@ -184,8 +186,8 @@ def read_dir(dirname):
             cutoff = 2#3
             unnorm_cutoff = 10#20
         
-        print f
-        print cutoff, unnorm_cutoff
+        print(f)
+        print(cutoff, unnorm_cutoff)
         
         _p = peaks(file=f)
         _p.label = fname_to_label[os.path.realpath(_p.file)]
@@ -201,20 +203,25 @@ def read_dir(dirname):
 if __name__ == '__main__':
     import argparse
     p = argparse.ArgumentParser(__doc__)
+
     p.add_argument(
         '-i', '--input', help='Directory of peaks files, which are searched \
 recursively.')
+
     #p.add_argument('-c', '--config', help='config.ini file',
     #               default='auto.ini')
     p.add_argument('-o', '--output', help='(Optional) A directory to output \
 peaks with coverages added and columns simplified.',
                    default=None)
+
     p.add_argument('-f', '--filter',
                    help='Just filter the input dir, not recursively.',
                    action='store_true', default=False)
+
     args = p.parse_args()
     args.input = os.path.realpath(args.input)
     #lib = config(args.config)
+
     if args.filter:
         read_dir(args.input)
     else:

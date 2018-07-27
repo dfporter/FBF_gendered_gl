@@ -1,4 +1,4 @@
-from __future__ import division
+
 import HTSeq
 import re
 import sys
@@ -42,14 +42,14 @@ class peaks(object):
     def add_reads(
         self, ga=HTSeq.GenomicArray('auto'), name='unnamed array'):
         if self.data is None:
-            print "Asked to set reads on an empty peaks object!"
+            print("Asked to set reads on an empty peaks object!")
             return False
         peaks = self.data  # Shorter.
         try:
-            ivs = zip(peaks['chrm'].tolist(), peaks['left'].tolist(),
-                peaks['right'].tolist(), peaks['strand'].tolist())
+            ivs = list(zip(peaks['chrm'].tolist(), peaks['left'].tolist(),
+                peaks['right'].tolist(), peaks['strand'].tolist()))
         except:
-            print "Could not create ivs from %s." % self.name
+            print("Could not create ivs from %s." % self.name)
             return False
         self.data[name] = [
             get_val(ga, HTSeq.GenomicInterval(*iv)) for iv in ivs]
@@ -58,11 +58,11 @@ class peaks(object):
                   ratio_col='ratio'):
         positive_denom = [x for x in self.data[col2].tolist() if x >0]
         if len(positive_denom) == 0:
-            print "All zero values for %s..." % col2
-            print "Defaulting to 1."
+            print("All zero values for %s..." % col2)
+            print("Defaulting to 1.")
             positive_denom = [1.]
         minimum_denom = min(positive_denom)
-        tups = zip(self.data[col1].tolist(), self.data[col2].tolist())
+        tups = list(zip(self.data[col1].tolist(), self.data[col2].tolist()))
         self.data[ratio_col] = [
             float(x[0])/max([x[1], minimum_denom]) for x in tups]
 
@@ -77,8 +77,8 @@ class peaks(object):
 
     def set_sum(self, to_sum=[], summed_col='average'):
         vals = [self.data[x].tolist() for x in to_sum]
-        print to_sum
-        print "^ to sum"
+        print(to_sum)
+        print("^ to sum")
         denom = max([1, len(to_sum)])
         sums = []
         for i in range(len(self.data.index)):

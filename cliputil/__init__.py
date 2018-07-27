@@ -45,18 +45,23 @@ def get_sequences(lib=None):
 
 
 def get_a_bedgraph(plus_file, minus_file):
+
     import HTSeq
+    
     ga = HTSeq.GenomicArray(chroms='auto', stranded=True)
+    
     with open(plus_file, 'r') as f:
         next(f)
         for line in f:
             s = line.rstrip('\n').split('\t')
             ga[HTSeq.GenomicInterval(s[0], int(s[1]), int(s[2]), '+')] = float(s[3])
+    
     with open(minus_file, 'r') as f:
         next(f)
         for line in f:
             s = line.rstrip('\n').split('\t')
             ga[HTSeq.GenomicInterval(s[0], int(s[1]), int(s[2]), '-')] = float(s[3])
+    
     return ga
 
 def load_gtf(lib=None, add_ncrna=False, make_genes_using_peaks_file=None):
