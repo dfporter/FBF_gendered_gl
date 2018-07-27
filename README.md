@@ -12,7 +12,8 @@ Fastq files are 51 nt long reads split by barcode (the four bases read_str[4:7])
 by the script clip-preprocess/split_by_barcode.py.
 
 From CLIP-preprocess readme:
-```bash
+
+```
 python src/split_by_barcode.py <fastq>
 
 Several steps are done to get to uncollapsed bed files. The script split_fastq_to_bed.py will move barcodes to read names, remove linkers, map and take the best map for each read, and finally create bams and beds from the sam output by STAR. The sequence of folders is:
