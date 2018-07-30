@@ -46,14 +46,14 @@ class gtf(object):
                 self.cds[g][t] = [x for x in to_line[g][t] if x['2'] == 'CDS']
                 self.other[g][t] = [x for x in to_line[g][t] if \
                               x['2'] not in ['exon', 'UTR', 'CDS']]
-        print "load_gtf(): created dicts of genes size: utrs: %i exons: %i cds: %i other: %i" % (
-            len(self.utrs), len(self.exon), len(self.cds), len(self.other))
-        print "load_gtf(): total txpt numbers are %i %i %i %i" %(
+        print("load_gtf(): created dicts of genes size: utrs: %i exons: %i cds: %i other: %i" % (
+            len(self.utrs), len(self.exon), len(self.cds), len(self.other)))
+        print("load_gtf(): total txpt numbers are %i %i %i %i" %(
             sum([len(self.utrs[gene_name] )for gene_name in self.utrs]),
             sum([len(self.exon[gene_name]) for gene_name in self.exon]),
             sum([len(self.cds[gene_name]) for gene_name in self.cds]),
             sum([len(self.other[gene_name]) for gene_name in self.other])
-            )
+            ))
         self.gene_to_tx_to_line = to_line
         return (self.utrs, self.exon, self.cds, self.other)
 
@@ -95,8 +95,8 @@ class gtf(object):
 
     def remove_five_prime_utrs(self, minus_strand_features_flipped=False):
         if not minus_strand_features_flipped:
-            print "Error: minus strand features must be flipped before",
-            print " calling gtf.remove_five_prime_utrs()."
+            print("Error: minus strand features must be flipped before", end=' ')
+            print(" calling gtf.remove_five_prime_utrs().")
             sys.exit()
         n_five_prime, n_three_prime, no_cds = 0, 0, 0
         for gene_name in self.utrs:
@@ -126,16 +126,16 @@ class gtf(object):
                     for index in to_remove:
                         del self.utrs[gene_name][txpt_id][index]
                 #self.utrs[gene_name][txpt_id] = to_keep[:]
-        print """5' UTRs: {0}. 3' UTRS: {1}. UTR with no CDS: {2}""".format(
-            n_five_prime, n_three_prime, no_cds)
+        print("""5' UTRs: {0}. 3' UTRS: {1}. UTR with no CDS: {2}""".format(
+            n_five_prime, n_three_prime, no_cds))
         #sys.exit()
 
     def flip_minus_strand_peak_features(self, peaks):
         chr_len = self.chr_lens
         if 'chrom' in peaks.columns: chrm_label = 'chrom'
         else: chrm_label = 'chrm'
-        _ivs = zip(peaks[chrm_label].tolist(), peaks.left, peaks.right,
-                   peaks.strand)
+        _ivs = list(zip(peaks[chrm_label].tolist(), peaks.left, peaks.right,
+                   peaks.strand))
         def left(_iv):
             if _iv[3] == '+': return _iv[1]
             return chr_len[_iv[0]] - _iv[2]
@@ -174,42 +174,42 @@ class gtf(object):
                               tx != self.longest_tx[gene]]
                     for tx in to_del:
                         del _feat[gene][tx]
-            else: print "No exons? %s" % gene
+            else: print("No exons? %s" % gene)
 
     def f_dict(self, _dict):
         li = ''
-        for tx, _list in _dict.items():
+        for tx, _list in list(_dict.items()):
             li += "\n-------\nTranscript:{0}:\n".format(tx)
             if _dict is None: return li
             for row in _list:
                 li += '\n ~ \n'
-                for k, v in row.items():
+                for k, v in list(row.items()):
                     li += "\t{0}\t{1}\n".format(k, v)
         return li
 
     def inspect(self, gene):
-        print "\/T\/ \n{0}:\nCDS: {1}\n UTR: {2}\n Exon: {3}\n Other: {4}".format(
+        print("\/T\/ \n{0}:\nCDS: {1}\n UTR: {2}\n Exon: {3}\n Other: {4}".format(
             gene,
             self.f_dict(self.cds[gene] if gene in self.cds else None),
             self.f_dict(self.utrs[gene] if gene in self.utrs else None),
             self.f_dict(self.exon[gene] if gene in self.exon else None),
-            self.f_dict(self.other[gene] if gene in self.other else None))
+            self.f_dict(self.other[gene] if gene in self.other else None)))
     
     def make_genes_using_input_peaks_file(
             self, peaks, sequences, rc_sequences, gtf_fname):
         self.flocs_map = {}
         self.sbgenes = {}
         if not hasattr(self, 'longest_tx'): self.longest_txpt()
-        tups = zip(peaks['gene_name'].tolist(),
+        tups = list(zip(peaks['gene_name'].tolist(),
                    peaks['left'].tolist(), peaks['right'].tolist(),
-                   peaks['chrm'].tolist(), peaks['strand'].tolist())
+                   peaks['chrm'].tolist(), peaks['strand'].tolist()))
         peaks_by_gene = collections.defaultdict(list)
         for tup in tups:
             peaks_by_gene[tup[0]].append(tup)
-        print "Making genes..."
+        print("Making genes...")
         for gene in self.exon:
             if (gene not in self.cds) or (len(self.cds[gene]) == 0):
-                print "No CDS or txpts for CDS {0}".format(gene)
+                print("No CDS or txpts for CDS {0}".format(gene))
                 continue
             if gene in peaks_by_gene:
                 n_of_peaks_in_tx = collections.defaultdict(int)
@@ -223,7 +223,7 @@ class gtf(object):
                             n_of_peaks_in_coding_tx[tx] += 1
                 #print n_of_peaks_in_tx
                 if len(n_of_peaks_in_tx) == 0:
-                    print "no overlaping exons for {0}: error".format(gene)
+                    print("no overlaping exons for {0}: error".format(gene))
                     continue
                 if len(n_of_peaks_in_coding_tx) == 0:
                     pass
@@ -231,7 +231,7 @@ class gtf(object):
  #                       gene)
                 else:
                     n_of_peaks_in_tx = n_of_peaks_in_coding_tx
-                vals = n_of_peaks_in_tx.values(); vals.sort()
+                vals = list(n_of_peaks_in_tx.values()); vals.sort()
                 max_peak_n = vals[-1]
                 ties = [tx for tx in n_of_peaks_in_tx \
                     if n_of_peaks_in_tx[tx] == max_peak_n]
@@ -241,23 +241,23 @@ class gtf(object):
                     tx_len = {}
                     for tx in ties:
                         tx_len[tx] = self.len_of_a_txpt(gene, tx)
-                    tx_to_use = sorted(tx_len.keys(), key=lambda x: tx_len[x])[-1]
+                    tx_to_use = sorted(list(tx_len.keys()), key=lambda x: tx_len[x])[-1]
 #                print "making gene with txpt {0}".format(tx_to_use)
                 self.make_a_gene(gene, tx_to_use, sequences, rc_sequences)
             else:
                 continue
                 if gene not in self.longest_tx:
-                    print 'Not in longest_tx.'
+                    print('Not in longest_tx.')
                     continue
                 if self.longest_tx[gene] == '':
-                    print 'Is empty.'
+                    print('Is empty.')
                     continue
                 self.make_a_gene(gene, self.longest_tx[gene],
                                  sequences, rc_sequences)
         x = 'Y65B4BL.1'
-        print "Y92H12A.4 in self.exon: {e}. In self.cds: {cds}. in self.sbgenes: {sb}.".format(
+        print("Y92H12A.4 in self.exon: {e}. In self.cds: {cds}. in self.sbgenes: {sb}.".format(
             e=(x in self.exon), cds=(x  in self.cds),
-            sb=(x in self.sbgenes))
+            sb=(x in self.sbgenes)))
 
     def transcripts_overlapping_a_range(self, peak, gene):
         overlapping_tx = set()
@@ -292,17 +292,17 @@ class gtf(object):
             #    print "^mpk-1 exon dict"
             #self.inspect(gene)
             if gene not in self.longest_tx:
-                print 'not in longest_tx'
+                print('not in longest_tx')
                 continue
             if self.longest_tx[gene] == '':
-                print 'is emp'
+                print('is emp')
                 continue
             self.make_a_gene(gene, self.longest_tx[gene], sequences, rc_sequences)
 
     def make_a_gene(self, gene, txpt, sequences, rc_sequences):
         if (txpt not in self.cds[gene]) or (
             len(self.cds[gene][txpt])==0):
-            print "txpt not in cds or cds empty {0}".format(gene)
+            print("txpt not in cds or cds empty {0}".format(gene))
             return
         cds = sorted(
             self.cds[gene][txpt], key=lambda x: int(x['3']))
@@ -418,11 +418,11 @@ class gtf(object):
             if not has_row:
                 no_cds_annotated.add(gene)
 #        no_cds_annotated = set(self.exon.keys()) - set(self.cds.keys())
-        if 'linc-7' in self.exon.keys():
-            print "Found linc-7"
-            print self.cds['linc-7']
-        print "---"
-        print "r23rua;slekjf"
+        if 'linc-7' in list(self.exon.keys()):
+            print("Found linc-7")
+            print(self.cds['linc-7'])
+        print("---")
+        print("r23rua;slekjf")
         nm = '''
         for gene in no_exons_cds:
             tx_len = {}
@@ -441,7 +441,7 @@ class gtf(object):
             rows = [x for x in rows if x['2']=='transcript']
             if len(rows) == 1: row = rows[0]
             else:
-                print "???"
+                print("???")
                 sys.exit()
             left = max([1, int(row['3'])-_pad])
             self.sbgenes[gene] = sbGene(HTSeq.GenomicInterval(
@@ -452,7 +452,7 @@ class gtf(object):
             self.sbgenes[gene].chr_lens = self.chr_lens
             self.sbgenes[gene].exons_dict = {
                 1: [row['0'], left, int(row['4'])+_pad, row['6']]}
-            if gene=='linc-7': print "Added linc-7 to gtf.sbgenes"
+            if gene=='linc-7': print("Added linc-7 to gtf.sbgenes")
 
     def add_peak_locations_to_transcripts(self, peaks):
         assert(type(peaks) == type(pandas.DataFrame()))
@@ -491,8 +491,8 @@ def extend_to_stop(cds_span, txpt_span, seq, sorted_cds, strand, sequences,
                 loggern.warn(
                     "%s: Missing an exon? %s" % (gene_name, str(exon_borders_in_seq)))
         else:
-            if verbose: print "%s: Did it work? Expected stop: %s" % (
-                gene_name, _add)
+            if verbose: print("%s: Did it work? Expected stop: %s" % (
+                gene_name, _add))
     return seq
 
 
@@ -530,16 +530,16 @@ def get_sequences():
 def _time(start): return time.time() - start
 
 if __name__ == '__main__':
-    print "Debug mode for gtf.py."
-    print sys.version
+    print("Debug mode for gtf.py.")
+    print(sys.version)
     start = time.time()
     seqs, rc_seqs, chr_lens = get_sequences()
-    print "get_sequneces(): {0} sec".format(_time(start))
+    print("get_sequneces(): {0} sec".format(_time(start)))
     start = time.time()
     g = gtf('/opt/lib/gtf_with_names_column.txt', debug=True)
-    print "gtf init(): {0} sec".format(_time(start))
+    print("gtf init(): {0} sec".format(_time(start)))
     start = time.time()
     g.flip_minus_strand_features(chr_lens)
     g.longest_txpt()
-    print "gtf flip strand and longest txpt(): {0} sec".format(_time(start))
+    print("gtf flip strand and longest txpt(): {0} sec".format(_time(start)))
     g.make_genes(seqs, rc_seqs)

@@ -26,9 +26,10 @@ Annotate the */*/null_hyp_4.txt files with reads,
  ```
  
 """
-from .__init__ import *
-from . import add_reads_to_peaks
-from .peaks import *
+import argparse
+from __init__ import *
+from add_reads_to_peaks import add_reads_to_peaks
+from peaks import *
 
 
 class peakSet(object):
@@ -45,6 +46,7 @@ class peakSet(object):
                 '_gene_norm$', '_mu$', 'pvalues',
                 '\Aexons$', '_nb$', '_std$', '\Alocal$',
                 'clip_local_norm', 'rna_seq_local_norm']):
+     
         for _p in self._peaks:
             _p.cut_columns(
                 remove_those_with_patterns=remove_those_with_patterns)
@@ -201,7 +203,8 @@ def read_dir(dirname):
         filtp.write_table(label_to_filtered_output_file[_p.label])
         
 if __name__ == '__main__':
-    import argparse
+
+    
     p = argparse.ArgumentParser(__doc__)
 
     p.add_argument(
@@ -226,3 +229,4 @@ peaks with coverages added and columns simplified.',
         read_dir(args.input)
     else:
         run(args)#, lib)
+    

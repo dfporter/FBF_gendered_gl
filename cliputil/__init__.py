@@ -1,11 +1,10 @@
 import os
 import configparser
-from .peaksList import peaksList
-from .volcanoMaker import volcanoMaker
-from . import gtf
-from . import rc
-from .create_gtf_of_longest_txpt_per_gene import *
-from .sbGene import *
+from peaksList import peaksList
+from volcanoMaker import volcanoMaker
+import gtf
+from create_gtf_of_longest_txpt_per_gene import *
+from sbGene import *
 
 
 def complement(s):
