@@ -104,7 +104,17 @@ The collapsed bed files then need their filenames translated from SRR* numbers:
 $ python clip-preprocess/translate_filenames.py -i <input folder> -o <output folder>
 ```
 
-At this point, bedgraph files can be created:
+Generation of “FBF” replicates for 25° datasets.
+ 25° oogenic FBF-1/FBF-2 replicates in the order 1/3, 2/2, and 3/1; then concatenate 25° spermatogenic FBF-1/FBF-2 replicates in the order 2/1, 1/2, and 3/3.
+```bash
+DN52egqo:individual_clip dfporter$ cat bed_collapsed/exp_fbf1_oo_1.bed bed_collapsed/exp_fbf2_oo_1.bed > bed_collapsed/exp_fbf_oo_1.bed
+DN52egqo:individual_clip dfporter$ cat bed_collapsed/exp_fbf1_oo_2.bed bed_collapsed/exp_fbf2_oo_3.bed > bed_collapsed/exp_fbf_oo_2.bed
+DN52egqo:individual_clip dfporter$ cat bed_collapsed/exp_fbf1_oo_3.bed bed_collapsed/exp_fbf2_oo_2.bed > bed_collapsed/exp_fbf_oo_3.bed
+DN52egqo:individual_clip dfporter$ cat bed_collapsed/exp_fbf1_sp_2.bed bed_collapsed/exp_fbf2_sp_2.bed > bed_collapsed/exp_fbf_sp_1.bed
+DN52egqo:individual_clip dfporter$ cat bed_collapsed/exp_fbf1_sp_1.bed bed_collapsed/exp_fbf2_sp_3.bed > bed_collapsed/exp_fbf_sp_2.bed
+DN52egqo:individual_clip dfporter$ cat bed_collapsed/exp_fbf1_sp_3.bed bed_collapsed/exp_fbf2_sp_1.bed > bed_collapsed/exp_fbf_sp_3.bed
+
+```
 
 ```bash
 $ python ../../../clip-preprocess/bed_to_wig.py -h

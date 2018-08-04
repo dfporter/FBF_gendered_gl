@@ -71,8 +71,10 @@ class peaks(object):
         return peaks(data=filt_data, name='filtered_' + self.name)
 
     def write_table(self, filename):
+
         if 'exp_reads' in self.data.columns:
-            self.data.sort(columns=['exp_reads'], ascending=False, inplace=True)
+            self.data.sort_values(by=['exp_reads'], ascending=False, inplace=True)
+        
         self.data.to_csv(filename, sep='\t', index=False)
 
     def set_sum(self, to_sum=[], summed_col='average'):

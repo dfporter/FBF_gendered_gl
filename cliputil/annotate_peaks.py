@@ -62,7 +62,7 @@ def make_ratio_column_from_raw_reads(lib, rootdir):
     for subdir, dirs, files in os.walk(rootdir):
         for file in files:
             path = os.path.join(subdir, file)
-            print path
+            print(path)
             p = annotatedPeaks(file=path)
             p.absolute_read_number(sizes)
             p.set_sum(
@@ -76,7 +76,7 @@ def make_ratio_column_from_raw_reads(lib, rootdir):
             if re.search('fbf2', path):
                 p.set_ratio(col1='unnorm_reads_fbf2_reads', col2='unnorm_reads_fbf2_n2')
             p.write(path)
-            print p
+            print(p)
 
 
 def get_bed_sizes(lib):
@@ -91,44 +91,58 @@ def get_bed_sizes(lib):
             continue
         label = bed.partition('_bed')[0]
         path = lib[bed] + '.bed'
-        print "***" + path
+        print("***" + path)
         if os.path.exists(path):
             size[label] = get_bed_size(path)
         else:
-            print "Expected file %s, but could not find..." % path
-    print size
+            print("Expected file %s, but could not find..." % path)
+    print(size)
     return size
 
 
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser()
+    
     parser.add_argument('-i', '--input')
+    parser.add_argument('-g', '--gtf',
+        default='/opt/lib/gtf_with_names_column.txt',
+        help='GTF file with names column.')
+    parser.add_argument('-f', '--fasta',
+        default='/opt/lib/c_elegans.WS235.genomic.fa',
+        help='Genomic fasta file.')
     parser.add_argument('-r', '--ratio_is_raw_reads',
                         default=False, action='store_true')
+    
     #parser.add_argument('-c', '--config_ini')
     args = parser.parse_args()
+    
     #lib = config.config(args.config_ini)
-    rootdir = args.input
-    gtf = pandas.read_csv('/opt/lib/gtf_with_names_column.txt', sep='\t')
-    fasta_filename = '/opt/lib/c_elegans.WS235.genomic.fa'
-    sequences = dict((re.sub('CHROMOSOME_', '', p.name), p.seq) for p in HTSeq.FastaReader(fasta_filename))
+    
+    print("Loading gtf file {}...".format(args.gtf))
+    gtf = pandas.read_csv(args.gtf, sep='\t')
     gtf_r = gtf.to_dict('records')
     gtf_d = collections.defaultdict(list)
+    
     for row in gtf_r:
         gtf_d[row['gene_name']].append(row)
+
+    print("Loading fasta file {}...".format(args.fasta))
+    sequences = dict((re.sub('CHROMOSOME_', '', p.name), p.seq) for p in HTSeq.FastaReader(args.fasta))
+        
     #gtf_one_per = dict([(x['gene_name'], x) for x in gtf_one_per])
     #ga = load_bedgraph('bedgraph_norm/combined_fbf1.wig')
+    print("Annotating peaks by walking through top directory {}...".format(args.input))
     ga = None
-    for subdir, dirs, files in os.walk(rootdir):
-        print "*" * 14
-        print subdir
-        print "---"
-        print dirs
-        print "---"
-        print files
+    for subdir, dirs, files in os.walk(args.input):
+
+        print("* Sub dir {}\n* Sub dirs {}\n* Files {}".format(
+            subdir, dirs, files))
+        
         for file in files:
-            print os.path.join(subdir, file)
+            print("Annotating {}...".format(os.path.join(subdir, file)))
             add_info(os.path.join(subdir, file),
                      gtf, sequences, ga, gtf_d)
+
     if args.ratio_is_raw_reads:
-        make_ratio_column_from_raw_reads(lib, rootdir)
+        make_ratio_column_from_raw_reads(lib, args.input)

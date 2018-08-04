@@ -11,16 +11,12 @@ peaks_file_basename: bedgraph_file.wig
 
 """
 
-import HTSeq
-import re
-import sys
-import os
-import pandas
+import HTSeq, re, argparse, sys, os, pandas
 import numpy as np
 import __init__
-from .__init__ import *
+from __init__ import *
 
-from .peaks import peaks
+from peaks import peaks
 
 def up3(p):
     return os.path.dirname(
@@ -44,9 +40,9 @@ def guess_bedgraph(path, normed=True):
     print("Expecting bedgraphs_unnorm folder in {0}".format(up))
 
     if normed:
-        bgn = os.path.join(up, 'bedgraphs_norm')
+        bgn = os.path.join(up, 'bedgraph_norm')
     else:
-        bgn = os.path.join(up, 'bedgraphs_unnorm')
+        bgn = os.path.join(up, 'bedgraph_unnorm')
 
     if not os.path.exists(bgn):
         print("no %s" % bgn)
@@ -99,7 +95,6 @@ def run(args):
     and return a list of the peaks objects.
     """
 
-    rep = {}
     peak_objs = []
 
     for subdir, dirs, files in os.walk(args.input):
@@ -120,21 +115,20 @@ def run(args):
             
             # Make a peaks object if we can.
             try:
-                rep[file_path] = peaks(
+                _p = peaks(
                     file=file_path, name=os.path.basename(file_path))
-                print("peaks obj\n--\n{0} --".format(rep[file_path]))
+                print("peaks obj\n--\n{0} --".format(_p))
+
             except:
-                print("\n".join(['-' * 7 for x in range(7)])) 
+                print("-\n-\n-\n-\n") 
                 print("\nFailure to create peaks object from {0}.".format(
                     file_path))
                 continue
             
-            print("-------\n{0}\n---\n".format(rep[file_path]))
+            print("-------\n{0}\n---\n".format(_p))
 
             # Look for the bedgraphs files for this peaks object.
             bedgraphs = guess_bedgraph(file_path)
-
-            _p = peaks(file=file_path)
 
             # Add reads from bedgraphs to peaks object. Edits in place, returns True if successful.
             if not add_reads_from_bedgraphs(_p, bedgraphs):
@@ -203,21 +197,28 @@ def add_reads_from_bedgraphs(_p, bedgraphs, normed=True):
             summed_col='unnorm_control_reads')
         _p.set_ratio(col1='unnorm_exp_reads', col2='unnorm_control_reads',
                      ratio_col='unnorm_ratio')
+
     return True
 
 
 if __name__ == '__main__':
-    import argparse
+
     p = argparse.ArgumentParser(__doc__)
+    
     p.add_argument(
         '-i', '--input', help='Directory of peaks files, which are searched \
 recursively.')
+    
     p.add_argument('-c', '--config', help='config.ini file',
                    default='auto.ini')
+    
     p.add_argument('-o', '--output', help='(Optional) A directory to output \
 peaks with coverages added. If not set, files are edited in place.',
                    default=None)
+
     args = p.parse_args()
     args.input = os.path.realpath(args.input)
+
     lib = config(args.config)
+    
     run(args)

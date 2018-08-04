@@ -44,8 +44,8 @@ class flocs:
             self.start_pos_in_seq = self.cds_left - self.txpt_left + 1
         if (seq[self.start_pos_in_seq:self.start_pos_in_seq+3] != 'ATG'):
             self.cds_left = init_cds_left
-            print "No ATG? {0} strand {1}".format(
-                self.transcript_id, strand)
+            print("No ATG? {0} strand {1}".format(
+                self.transcript_id, strand))
         self.cds_right = cds_right
         self.strand = strand
         #if self.strand == '+':
@@ -61,14 +61,14 @@ class flocs:
         self.threep_seq = ''
         self.peak_locs = []
         self.peak_locs_genomic_coord = []
-        if verbose: print "type cds_left %s txpt_left %s" % (type(self.cds_left), type(self.txpt_left))
+        if verbose: print("type cds_left %s txpt_left %s" % (type(self.cds_left), type(self.txpt_left)))
         self.left_len = float(self.cds_left - self.txpt_left)
         self.right_len = float(self.txpt_right - self.cds_right)
         self.cds_len = len(self.seq) - self.left_len - self.right_len
         self.stop_pos_in_seq = len(seq) - (self.txpt_right - self.cds_right) # Right border of trinucleotide seq.
 #s        if self.gene_name == 'mrpl-15':
-        if verbose: print "flocs.__init__(): %s, len(seq) %i, txpt_right %f, cds_right %f, stop_pos_in_seq %f" % (
-            self.gene_name, len(seq), self.txpt_right, self.cds_right, self.stop_pos_in_seq)
+        if verbose: print("flocs.__init__(): %s, len(seq) %i, txpt_right %f, cds_right %f, stop_pos_in_seq %f" % (
+            self.gene_name, len(seq), self.txpt_right, self.cds_right, self.stop_pos_in_seq))
         self.start_pos_in_seq = self.cds_left - self.txpt_left + 1 # Left border of trinucleotide seq.
         self.norm_neg1 = []
         self.norm_neg2 = []
@@ -92,23 +92,23 @@ seq len: {seqlen}""".format(
             given_l_utr=self.given_left_utr, given_r_utr=self.given_right_utr,
             seqlen=len(self.seq))
         if self.seq[self.start_pos_in_seq:self.start_pos_in_seq+3] != 'ATG':
-            print "Wrong start:\n" + li
-            print "flocs.__init__(): %s, len(seq) %i, txpt_right %f, cds_right %f, stop_pos_in_seq %f" % (
-                self.gene_name, len(self.seq), self.txpt_right, self.cds_right, self.stop_pos_in_seq)
-            print str(self)
-            print "Left UTR:\n" + self.seq[0:self.start_pos_in_seq]
-            print "CDS:\n" + self.seq[self.start_pos_in_seq:self.stop_pos_in_seq]
-            print self.seq
-            print '***'
+            print("Wrong start:\n" + li)
+            print("flocs.__init__(): %s, len(seq) %i, txpt_right %f, cds_right %f, stop_pos_in_seq %f" % (
+                self.gene_name, len(self.seq), self.txpt_right, self.cds_right, self.stop_pos_in_seq))
+            print(str(self))
+            print("Left UTR:\n" + self.seq[0:self.start_pos_in_seq])
+            print("CDS:\n" + self.seq[self.start_pos_in_seq:self.stop_pos_in_seq])
+            print(self.seq)
+            print('***')
         if self.seq[self.stop_pos_in_seq:self.stop_pos_in_seq+3] not in [
             'TAA', 'TAG', 'TGA']:
-            print "Wrong stop:\n" + li
-            print str(self)
-            print "Left UTR:\n" + self.seq[0:self.start_pos_in_seq]
-            print "CDS:\n" + self.seq[self.start_pos_in_seq:self.stop_pos_in_seq]
-            print "Right UTR:\n" + self.seq[self.stop_pos_in_seq:]
-            print self.seq
-            print '***'
+            print("Wrong stop:\n" + li)
+            print(str(self))
+            print("Left UTR:\n" + self.seq[0:self.start_pos_in_seq])
+            print("CDS:\n" + self.seq[self.start_pos_in_seq:self.stop_pos_in_seq])
+            print("Right UTR:\n" + self.seq[self.stop_pos_in_seq:])
+            print(self.seq)
+            print('***')
 
     def __str__(self):
         li = """
@@ -139,7 +139,7 @@ name: {name}
         return li
 
     def find_features(self, peaks=False):
-        print 'finding features'
+        print('finding features')
         self.find_motif()
         self.find_controls()
         self.find_polyA()
@@ -178,7 +178,7 @@ name: {name}
             self.neg3_locs.append(
                 (m.start(), m.end())
                 )
-        if verbose: print "find_controls(): %s %s %s" % (str(self.neg1_locs), str(self.neg2_locs), str(self.neg3_locs))
+        if verbose: print("find_controls(): %s %s %s" % (str(self.neg1_locs), str(self.neg2_locs), str(self.neg3_locs)))
 
     def find_polyA(self):
         p = re.compile('AATAAA')
@@ -387,16 +387,16 @@ name: {name}
     def find_peaks(self, peaks_l, chr_lens):
         verbose = True
         'peaks : list of dict objects.'
-        if verbose: print "flocs.find_peaks(): Looking for %s." % self.gene_name
+        if verbose: print("flocs.find_peaks(): Looking for %s." % self.gene_name)
         if self.gene_name not in peaks_l:
-            if verbose: print '...not in passed peak list.'
+            if verbose: print('...not in passed peak list.')
             return False
         # Peaks on - strand have coordinates flipped, as just like the floc object.
         for row in peaks_l[self.gene_name]:
-            if verbose: print str(row)[:100]
+            if verbose: print(str(row)[:100])
             if (self.txpt_left <= row['left'] <= self.txpt_right) or (
                     self.txpt_left <= row['right'] <= self.txpt_right):
-                if verbose: print '...in txpt'
+                if verbose: print('...in txpt')
                 if row['right'] > self.txpt_right:
                     peak_right = self.txpt_right
                 else: peak_right = row['right']
@@ -408,29 +408,29 @@ name: {name}
                 left_found = 0
                 right_found = 0
                 for exon_num in self.exons_dict:
-                    print 'peak left {0} right {1}'.format(
-                        peak_left, peak_right)
-                    if verbose: print 'exon num, ' + str(exon_num)
+                    print('peak left {0} right {1}'.format(
+                        peak_left, peak_right))
+                    if verbose: print('exon num, ' + str(exon_num))
                     try:
                         exon = self.exons_dict[exon_num]
-                        print exon[1], exon[2]
+                        print(exon[1], exon[2])
                     except:
-                        if verbose: print 'flocs.find_peaks(): Did not find %s in %s. Exons_dict = %s' % (
-                            str(exon_num), str(self.exons_dict), str(self.exons_dict))
+                        if verbose: print('flocs.find_peaks(): Did not find %s in %s. Exons_dict = %s' % (
+                            str(exon_num), str(self.exons_dict), str(self.exons_dict)))
                     if (exon[1] <= peak_left <= exon[2]):
                         # Where in the mature sequence is this exon?
                         (exon_start_pos_in_seq, end) = self.exon_borders_in_seq[exon_num]
                         pos_in_seq_left = exon_start_pos_in_seq + (peak_left - exon[1])
                         left_found = 1
-                        if verbose: print "flocs.find_peaks(): Found peak left border %i in exon %i (%s)." % (peak_left, exon_num, str(exon))
-                        if verbose: print "exon_start_pos_in_seq, exon[1] = %i, %i" % (exon_start_pos_in_seq, exon[1])
+                        if verbose: print("flocs.find_peaks(): Found peak left border %i in exon %i (%s)." % (peak_left, exon_num, str(exon)))
+                        if verbose: print("exon_start_pos_in_seq, exon[1] = %i, %i" % (exon_start_pos_in_seq, exon[1]))
                     if (exon[1] <= peak_right <= exon[2]):
                         (exon_start_pos_in_seq, end) = self.exon_borders_in_seq[exon_num]
                         pos_in_seq_right = exon_start_pos_in_seq + (peak_right - exon[1])
                         right_found = 1
-                        if verbose: print "flocs.find_peaks(): Found peak right border %i in exon %i (%s)." % (peak_right, exon_num, str(exon))
-                print 'found left? {0}, right? {1}'.format(
-                    left_found, right_found)
+                        if verbose: print("flocs.find_peaks(): Found peak right border %i in exon %i (%s)." % (peak_right, exon_num, str(exon)))
+                print('found left? {0}, right? {1}'.format(
+                    left_found, right_found))
                 try:
                     if left_found and right_found:
                         self.peak_locs.append(
@@ -447,29 +447,29 @@ name: {name}
                             (peak_left, peak_right, float(row['height']))
                         )
                         if verbose:
-                            print "flocs.find_peaks(): Appended %s to self.peak_locs." % str((
-                                pos_in_seq_left, pos_in_seq_right, row['height']))
-                            print "flocs.find_peaks(): chrom %s, added %s to self.peak_locs_genomic_coord" % (
+                            print("flocs.find_peaks(): Appended %s to self.peak_locs." % str((
+                                pos_in_seq_left, pos_in_seq_right, row['height'])))
+                            print("flocs.find_peaks(): chrom %s, added %s to self.peak_locs_genomic_coord" % (
                                 self.chrom, str((peak_left, peak_right, float(row['height'])))
-                            )
+                            ))
                 except:
                     #if verbose:
-                    print "Peak not found in exon: %i. txpt: %i %i" % (
-                        peak_left, int(self.txpt_left), int(self.txpt_right))
+                    print("Peak not found in exon: %i. txpt: %i %i" % (
+                        peak_left, int(self.txpt_left), int(self.txpt_right)))
                     #if verbose:
-                    print "Exons: %s" % str(self.exons_dict)
+                    print("Exons: %s" % str(self.exons_dict))
                     #if verbose:
-                    print "Exon borders in seq dict: %s" % str(self.exon_borders_in_seq)
+                    print("Exon borders in seq dict: %s" % str(self.exon_borders_in_seq))
             else:  # Peak not within transcript.
                 if verbose: 'Peak not in transcript'
                 pass
 
     def normalize_features(self):
-        if verbose: print "flocs.normalize_features() called for %s" % self.transcript_id
+        if verbose: print("flocs.normalize_features() called for %s" % self.transcript_id)
         self.norm_motif = []
         self.norm_polyA = []
         self.norm_peaks = []
-        if verbose: print "All data in this object: %s" % str(self.__dict__)
+        if verbose: print("All data in this object: %s" % str(self.__dict__))
         for fbe in self.motif_locs:
             self.norm_motif.append(
                 (self.get_norm_pos(fbe[0],test='fbe'), self.get_norm_pos(fbe[1],test='fbe'))
@@ -482,23 +482,23 @@ name: {name}
                     (self.get_norm_pos(motif[0],test='motif'), self.get_norm_pos(motif[1],test='motif'))
                     )
         for peak in self.peak_locs:
-            if verbose: print "flocs.normalize_features(): peak %s" % str(peak)
+            if verbose: print("flocs.normalize_features(): peak %s" % str(peak))
             self.norm_peaks.append(
                 (self.get_norm_pos(peak[0], test='peak'),
                  self.get_norm_pos(peak[1], test='peak'), peak[2])
                 # Third element is height.
                 )
-            if verbose: print "flocs.normalize_features(): Normalized peak %s to %s. CDS borders %i, %i." % (
-                str(peak), str(self.norm_peaks[-1]), self.start_pos_in_seq, self.stop_pos_in_seq)
+            if verbose: print("flocs.normalize_features(): Normalized peak %s to %s. CDS borders %i, %i." % (
+                str(peak), str(self.norm_peaks[-1]), self.start_pos_in_seq, self.stop_pos_in_seq))
         for polyA in self.polyA_locs:
             self.norm_polyA.append(
                 (self.get_norm_pos(polyA[0],test='polyA'), self.get_norm_pos(polyA[1],test='polyA'))
                 )
-        if verbose: print "normalize_features(): %s %s %s" % (str(self.norm_neg1), str(self.norm_neg2), str(self.norm_neg3))
+        if verbose: print("normalize_features(): %s %s %s" % (str(self.norm_neg1), str(self.norm_neg2), str(self.norm_neg3)))
 
     def get_norm_pos(self, pos, test=''):
         if pos < self.start_pos_in_seq:
-            print "Peak in 5'UTR: %s" % str(self)
+            print("Peak in 5'UTR: %s" % str(self))
             norml = int(float(pos) * norm_left_len/float(self.start_pos_in_seq))
         if float(self.start_pos_in_seq) <= pos <= float(self.stop_pos_in_seq):
             pos_in_cds = pos - self.start_pos_in_seq
@@ -512,24 +512,24 @@ name: {name}
                 norm_left_len + norm_cds_len + int(float(pos_in_right) * norm_right_len/float(len(self.seq) - self.stop_pos_in_seq))
                 )
         if not hasattr(self, 'motif'):
-            print 'Motif not set. Set floc.motif before calling get_norm_pos.'
+            print('Motif not set. Set floc.motif before calling get_norm_pos.')
         # if motif is None:
         #     motif = 'TGT\w\w\wAT'
         try:
             if norml > 1400:
-                if verbose: print "\ntype %s" % test
-                if verbose: print "\tpos %i left_len %f cds_len %f right_len %f sum of lens %f seq len %i" % (
+                if verbose: print("\ntype %s" % test)
+                if verbose: print("\tpos %i left_len %f cds_len %f right_len %f sum of lens %f seq len %i" % (
                     pos, self.left_len, self.cds_len, self.right_len,
                     self.left_len + self.cds_len + self.right_len,
-                    len(self.seq))
-                if verbose: print "\tnorml = %i" % norml
+                    len(self.seq)))
+                if verbose: print("\tnorml = %i" % norml)
                 p = re.compile(motif)
                 for m in p.finditer(self.seq):
-                    if verbose: print m.span()
+                    if verbose: print(m.span())
                     #print self.get_norm_pos(m.span()[0])
             return norml
         except:
-            if verbose: print "Error in flocs.get_norm_pos(): pos=%s" % str(pos)
+            if verbose: print("Error in flocs.get_norm_pos(): pos=%s" % str(pos))
             return 0
 
     def get_peak_pos_relative_to_polyA(self):
@@ -548,7 +548,7 @@ name: {name}
         if len(self.motif_locs) > 0:
             for fbe in self.motif_locs:
                 if type(fbe) != tuple:
-                    print "fbe not tup: %s" % str(self.motif_locs)
+                    print("fbe not tup: %s" % str(self.motif_locs))
                     continue
                 _norm_p = self.get_norm_pos_of_feature(fbe)
                 if _norm_p:
@@ -563,7 +563,7 @@ name: {name}
                 self.vs_polyA = []
                 for motif in norm_set:
                     if type(motif) != tuple:
-                        print "motif not tup: %s" % str(norm_set)
+                        print("motif not tup: %s" % str(norm_set))
                         continue
                     _norm_p = self.get_norm_pos_of_feature(motif)
                     if _norm_p:

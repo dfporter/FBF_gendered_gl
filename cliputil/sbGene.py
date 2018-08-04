@@ -78,7 +78,7 @@ class sbGene:
         m_indexes = list(indexes_of_maxima)
         if len(m_indexes) == 0:
             if debug:
-                print "No maxima in {0}".format(self.gene_name)
+                print("No maxima in {0}".format(self.gene_name))
             return
         # Watersheding.
         too_close = []
@@ -150,9 +150,9 @@ class sbGene:
         to_genome = self.pos_in_exon_coverage_mapped_to_genomic_pos
         if end is None:
             if start not in to_genome:
-                print "{0} pos not in exon ({1} -> {2}, {3} keys())".format(
+                print("{0} pos not in exon ({1} -> {2}, {3} keys())".format(
                     start, min(to_genome.keys()), max(to_genome.keys()),
-                    len(to_genome))
+                    len(to_genome)))
                 ga[HTSeq.GenomicPosition(self.iv.chrom, 1, self.iv.strand)] = 1
                 return
             ga[HTSeq.GenomicPosition(
@@ -175,9 +175,9 @@ class sbGene:
         to_genome = self.pos_in_exon_coverage_mapped_to_genomic_pos
         if end is None:
             if start not in to_genome:
-                print "{0} pos not in exon ({1} -> {2}, {3} keys())".format(
+                print("{0} pos not in exon ({1} -> {2}, {3} keys())".format(
                     start, min(to_genome.keys()), max(to_genome.keys()),
-                    len(to_genome))
+                    len(to_genome)))
                 return HTSeq.GenomicPosition(self.iv.chrom, 1, self.iv.strand)
             return HTSeq.GenomicPosition(
                 self.iv.chrom,
@@ -214,7 +214,7 @@ class sbGene:
             n_clusters = len(self.clusters) #len([x for x in maxes if x>1])
             #n_clusters = len(filter(lambda x: np.nanmax(x)>1, arr))
         if n_clusters == 0:
-            print "...Failure"     
+            print("...Failure")     
         return n_clusters
 
     def consecutive(self, data):
@@ -254,7 +254,7 @@ class sbGene:
         self.exon_coverage = np.array([])
         self.pos_in_exon_coverage_mapped_to_genomic_pos = {}
         first_exon_left = exons_dict[
-            sorted(exons_dict.keys(), key=lambda x: int(x))[0]][1]
+            sorted(list(exons_dict.keys()), key=lambda x: int(x))[0]][1]
         reverse = True if (self.iv.strand == '-') else False
 #        if strand == '-': reverse = True
         self.exons_dict = exons_dict
@@ -280,7 +280,7 @@ class sbGene:
         self.exon_ivs = []
         reverse = True if (self.iv.strand == '-') else False
         exon_order = sorted(
-            exons_dict.keys(), key=lambda x: int(x), reverse=reverse)
+            list(exons_dict.keys()), key=lambda x: int(x), reverse=reverse)
         for i in exon_order:
             self.exon_ivs.append(HTSeq.GenomicInterval(*exons_dict[i]))
 

@@ -7,12 +7,16 @@ import numpy as np
 
 from peaks import peaks
 from locatedPeak import locatedPeak
+
 sys.path.insert(0,
                 '/groups/Kimble/Aman Prasad/clip2/analysis/src/')
 import add_info_columns
 
 def seq_from_iv(chrm, start, end, strand, sequences):
+
     seq = sequences[chrm][start:end]
+    seq = seq.decode()
+
     if strand == '-':
         return rc(seq)
     else:
@@ -22,15 +26,16 @@ def seq_from_iv(chrm, start, end, strand, sequences):
 def complement(s):
     basecomplement = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A', 'N': 'N',
                       'a': 't', 'c': 'g', 'g': 'c', 't': 'a', 'n': 'n'}
-    letters = list(s)
-    letters = [basecomplement[base] for base in letters]
+    try:
+        letters = [basecomplement[base] for base in list(s)]
+    except:
+        raise IOError("Passed the sequence {} to complement but not DNA.".format(s))
+
     return ''.join(letters)
 
 
 def rc(s):
-    s = s[::-1]
-    s = complement(s)
-    return s
+    return complement(s[::-1])
 
 
 class annotatedPeaks(peaks):
