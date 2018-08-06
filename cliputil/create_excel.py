@@ -85,7 +85,9 @@ to_sheet = {
     'sp_fbf1': u'SP FBF-1 (25' + u'\xb0' + u'C)',
     'sp_fbf2': u'SP FBF-2 (25' + u'\xb0' + u'C)',
     'oo_both': u'OO FBF (25' + u'\xb0' + u'C)',
+    'oo_fbf': u'OO FBF (25' + u'\xb0' + u'C)',
     'sp_both': u'SP FBF (25' + u'\xb0' + u'C)',
+    'sp_fbf': u'SP FBF (25' + u'\xb0' + u'C)',
     'Robust, unique FBF-1': u'R.U. FBF-1 (20' + u'\xb0' + u'C)',
     'Robust, unique FBF-2': u'R.U. FBF-2 (20' + u'\xb0' + u'C)',
 }
@@ -123,7 +125,7 @@ writer.save()
 ########
 
 reads = []
-for fname in glob.glob('all_bed_collapsed/*bed'):
+for fname in glob.glob('bed_collapsed/*bed'):
     f = re.sub('\.bed', '', os.path.basename(fname))
     if re.match('$n2_oo.*', f): continue
     reads.append({
@@ -134,7 +136,7 @@ reads = pandas.DataFrame(reads)
 
 
 if len(reads.index) == 0:
-    print("Found no all_bed_collapsed/*bed files, and will not output read stats as a result.")
+    print("Found no bed_collapsed/*bed files, and will not output read stats as a result.")
     sys.exit()
 print(reads)
 
@@ -150,7 +152,10 @@ def count_fbe(x):
     except:
         print("error: {0}".format(x))
         return 0
+
+
 res = []#collections.defaultdict(dict)#pandas.Dataframe()
+
 for f in dfs:
     top = dfs[f][dfs[f]['Rank']<201].copy()
     res.append({
@@ -234,9 +239,9 @@ res.to_excel(
 reads = reads[['Sample', 'Number of unique reads mapping uniquely']]
 reads.to_excel(writer, sheet_name='Unique read counts', index=False)
 # Correlations in peak regions:
-corrs = pandas.read_csv(
-    'tables/correlations_fbf1_and_fbf2.txt', sep='\t',
-    index_col=False)
-corrs.to_excel(writer, sheet_name='Corr FBF-1 v -2', index=False)
+#corrs = pandas.read_csv(
+#    'tables/correlations_fbf1_and_fbf2.txt', sep='\t',
+#    index_col=False)
+#corrs.to_excel(writer, sheet_name='Corr FBF-1 v -2', index=False)
 writer.save()
 

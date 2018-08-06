@@ -65,10 +65,12 @@ class figureMaker():
         Sets self.df (dict of dfs) and self.targs (dict of gene name sets).
         """
         
-        if label_to_file is None:
+        if label_to_file is not None:
+            self.label_to_file = label_to_file
+        elif hasattr(self, 'label_to_fname'):
             self.label_to_file = self.label_to_fname
         else:
-            self.label_to_file = label_to_file
+            self.label_to_file = label_to_fname
         
         self.df = dict([
             (k, self.read_csv(v)) for k, v in self.label_to_file.items()])

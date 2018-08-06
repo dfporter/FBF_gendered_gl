@@ -1,24 +1,15 @@
-from __future__ import division
-import pandas as pandas
+import glob, pickle, seaborn, scipy, re, collections, pandas, importlib
 import matplotlib.pyplot as plt
 import seaborn as sns
-import collections
 import numpy as np
-import glob
-import pickle
-import seaborn
-import scipy
 import scipy.stats as scs
 
-import importlib
 
 rl = importlib.reload
 
-import re
 from collections import defaultdict
 #from scipy.spatial import distance
 #from scipy.cluster import hierarchy
-
 import figureMaker
 import utils
 from peaksList import peaksList
@@ -629,7 +620,7 @@ if __name__ == '__main__':
     print("Creating heatmapMaker() object()...")
     v = heatmapMaker()
     print("Created heatmapMaker() object(). Loading peaks files...")
-    v.load(label_to_fname)  # Global from vennMaker used.
+    v.load_peaks_csv_files(figureMaker.label_to_fname)  # Global from vennMaker used.
     plt.clf()
     plt.rc('font', size=1)
     fig, ax = plt.subplots()

@@ -120,7 +120,7 @@ def run(args):
                 print("peaks obj\n--\n{0} --".format(_p))
 
             except:
-                print("-\n-\n-\n-\n") 
+                print("-\n-\n-\n-\n")
                 print("\nFailure to create peaks object from {0}.".format(
                     file_path))
                 continue

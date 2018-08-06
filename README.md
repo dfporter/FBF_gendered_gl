@@ -149,14 +149,71 @@ optional arguments:
 
 Peaks are then called using cwt-callpeaks for each set individually.
 
+Peak calls
+---
+
+Changed wd into each directory under individual_clip/ and generared auto.ini files.
+
+```bash
+python cwt-peakcaller/generate_config_ini.py .
+```
+
+Change min_rep_number to 3 (except, oo_fbf1).
+
+Call peaks.
+
+```bash
+nohup python cwt-peakcaller/main.py -c auto.ini -m -n -x > t &
+# -m: no NB. -n: no UI. -x: clobber.
+```
+
+Combine peak calling info and add reads-in-peaks/annotations.
+---
+
+This will create combined_filtered/ and combined_unfiltered/ directories from individual CLIP peaks files:
+```bash
+python cliputil/filter.py -i individual_clip/
+# Outputs combined_unfiltered/.
+```
+
+Then:
+```bash
+# Annotate these peaks with seq, FBE and biotype.
+python cliputil/annotate_peaks.py -i combined_unfiltered/
+python cliputil/annotate_peaks.py -i combined_filtered/
+```
+
+cliputil/filter.py adds reads-in-peak numbers for both normalized and unnormalized numbers.
+
+Filtering
+---
+
+Filter by the hardcoded ratios:
+```bash
+python cliputil/filter.py -f -i combined_unfiltered/
+```
+
+Final results:
+```bash
+python cliputil/score_metrics.py -c auto.ini -p combined_filtered/
+```
+
+Assigning to genes
+---
+This creates the combined_counts.txt file and the counts/ directories that are used for 
+reads per gene analysis, including DESeq2.
+
+```bash
+python cliputil/assign_to_genes.py -c auto.ini --bed all_bed_collapsed/
+```
+
 Analysis
 ======
 
 This analysis begins with the filtered, separately called oo/sp/20deg peaks
  files and associated wig files.
 
- It also includes library files of DESeq2 output - quite a few library files,
- in fact.
+ It also includes library files of DESeq2 output.
 
 Essentially, CLIP data constitutes:
 
@@ -181,60 +238,6 @@ CLIP datasets used:
 9. 20 deg FBF
 
 
-
-Peak calls
----
-
-Changed wd into each directory under individual_clip/ and generared auto.ini files.
-
-```bash
-python ../spermatogenic/cwt-peakcaller/generate_config_ini.py .
-```
-
-Change min_rep_number to 3 (except, oo_fbf1).
-
-Call peaks.
-
-```bash
-nohup python /groups/Kimble/Common/fbf_celltype/individual_clip/spermatogenic/cwt-peakcaller/main.py -c auto.ini -m -n -x > t &
-# -m: no NB. -n: no UI. -x: clobber.
-```
-
-Combine peak calling info and add reads-in-peaks/annotations.
----
-
-This will create combined_filtered/ and combined_unfiltered/ directories:
-
-```bash
-python cliputil/filter.py -i individual_clip
-# Outputs combined_unfiltered/.
-# Annotate these peaks with seq, FBE and biotype.
-python cliputil/annotate_peaks.py -i combined_unfiltered/
-```
-
-This adds reads-in-peak numbers for both normalized and unnormalized numbers.
-
-Filtering
----
-
-Filter by the hardcoded ratios:
-```bash
-python cliputil/filter.py -f -i combined_unfiltered/
-```
-
-Final results:
-```bash
-python cliputil/score_metrics.py -c auto.ini -p combined_filtered/
-```
-
-Assigning to genes
----
-This creates the combined_counts.txt file and the counts/ directories that are used for 
-reads per gene analysis, including DESeq2.
-
-```bash
-python cliputil/assign_to_genes.py --gtf lib/gtf_with_names_column --bed all_bed_collapsed/
-```
 
 
 Supplementary tables

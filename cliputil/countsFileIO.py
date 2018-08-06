@@ -7,6 +7,7 @@ import importlib
 rl = importlib.reload
 rl(countsColumnsNaming)
 to_len={
+
 'exp_fbf_oo_rt9_and_1_counts.txt': 2108384,
 'exp_fbf_oo_rt11_and_6_counts.txt': 1084505,
 'exp_fbf_oo_rt2_and_13_counts.txt': 1104292,
@@ -76,7 +77,35 @@ to_len={
 'exp_fbf2_oo_lane2_rt13_counts.txt': 510318,
 'exp_fbf2_oo_lane2_rt2_counts.txt': 593974,
 'SP RPKM': 1e6,
-'OO RPKM': 1e6}
+'OO RPKM': 1e6,
+
+"control_oo_counts.txt": 393784,
+"control_oo_1_counts.txt": 97070,
+"control_oo_2_counts.txt": 200654,
+"control_oo_3_counts.txt": 96060,
+"control_sp_counts.txt": 359370,
+"control_sp_1_counts.txt": 128443,
+"control_sp_2_counts.txt": 65914,
+"control_sp_3_counts.txt": 165013,
+"exp_fbf1_oo_1_counts.txt": 13486,
+"exp_fbf1_oo_2_counts.txt": 681860,
+"exp_fbf1_oo_3_counts.txt": 1698217,
+"exp_fbf1_sp_1_counts.txt": 852744,
+"exp_fbf1_sp_2_counts.txt": 475910,
+"exp_fbf1_sp_3_counts.txt": 1064502,
+"exp_fbf2_oo_1_counts.txt": 426458,
+"exp_fbf2_oo_2_counts.txt": 186319,
+"exp_fbf2_oo_3_counts.txt": 354981,
+"exp_fbf2_sp_1_counts.txt": 569792,
+"exp_fbf2_sp_2_counts.txt": 1001336,
+"exp_fbf2_sp_3_counts.txt": 740220,
+"exp_fbf_oo_1_counts.txt": 439944,
+"exp_fbf_oo_2_counts.txt": 1036841,
+"exp_fbf_oo_3_counts.txt": 1884536,
+"exp_fbf_sp_1_counts.txt": 1477246,
+"exp_fbf_sp_2_counts.txt": 1592964,
+"exp_fbf_sp_3_counts.txt": 1634294,
+}
 
 
 class countsFileIO(countsColumnsNaming.countsColumnsNaming):
@@ -147,8 +176,9 @@ class countsFileIO(countsColumnsNaming.countsColumnsNaming):
             return df
         
         tups = zip(
-            df['c_sp_1'].tolist(), df['c_oo_1'].tolist(),
-            df['c_n2_1'].tolist())
+            df['control_sp'].tolist(), df['control_oo'].tolist(),
+            #df['c_n2_1'].tolist()
+            )
         
         df['ave_neg'] = [np.sum(t)/3. for t in tups]
         

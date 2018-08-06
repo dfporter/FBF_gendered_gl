@@ -1,43 +1,25 @@
-from __future__ import division
-import sys
-import glob
-import os
-import re
-import pandas
+
+import sys, glob, os, re, pandas, pickle, argparse, logging, datetime, HTSeq, time, traceback
 import scipy as sp
 import numpy as np
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import matplotlib
 from scipy import stats
-import pickle
-import argparse
 
 sys.path.insert(0, '/Network/Servers/file.biochem.wisc.edu/Volumes/BioSAN/Users/dfporter/.local/lib/python2.6/site-packages')
 # Need HTSeq version 0.6, hence the sys.path alteration.
 sys.path.insert(
     0, '/groups/Kimble/Common/fbf_celltype/redo_fbf/analysis/src/')
-import HTSeq
-import logging
-import datetime
-import argparse
-import os
-import time
-import traceback
-import sys
 
 import add_height
 import scatterplot_correlation_by_wig
 
 
-#import normalize_bedgraph
-import argparse
-
-
 def build_ga(file_list):
     ga = HTSeq.GenomicArray('auto', stranded=True)
     for infile in file_list:
-        print "Loading {0}...".format(infile)
+        print("Loading {0}...".format(infile))
         ga = add_a_bedgraph(ga, infile + '_+.wig', infile + '_-.wig')
     return ga
 
@@ -59,8 +41,8 @@ def mk_bedgraphs(fbf1oo, fbf2oo, fbf1sp, fbf2sp, fbf1old, fbf2old):
         outname = "{d}/{b}".format(
             d=output_bedgraph_unnorm,
             b=k)
-        print "Creating a bedgraph {c} from {a}...".format(
-            c=outname, a=k)
+        print("Creating a bedgraph {c} from {a}...".format(
+            c=outname, a=k))
         outname_plus = outname + '_+.wig'
         ga[k].write_bedgraph_file(outname_plus, strand='+')
         outname_minus = outname + '_-.wig'
@@ -92,28 +74,36 @@ def get_args():
     parser.add_argument('-d', '--directory', dest='directory',
                         default='combined_filtered/',
                         help='Input directory of peaks files.')
+
     args = parser.parse_args()
     return args
 
 
 if __name__ == '__main__':
     args = get_args()
+
     fbf1oo = ['exp_fbf1_oo_lane2_rt1',
      'exp_fbf1_oo_lane2_rt6',
      'exp_fbf1_oo_lane2_rt9']
+    
     fbf2oo = ['exp_fbf2_oo_lane2_rt2',
      'exp_fbf2_oo_lane2_rt11',
      'exp_fbf2_oo_lane2_rt13']
+    
     fbf1sp = ['exp_fbf1_sp_lane1_rt1',
      'exp_fbf1_sp_lane1_rt6',
      'exp_fbf1_sp_lane1_rt9']
+    
     fbf2sp = ['exp_fbf2_sp_lane1_rt2',
      'exp_fbf2_sp_lane1_rt13',
      'exp_fbf2_sp_lane1_rt14']
+    
     fbf1old = ['exp_fbf1_CGGA', 'exp_fbf1_GGTT',
      'exp_fbf1_TGGC']
+    
     fbf2old = ['exp_fbf2_CGGA', 'exp_fbf2_GGTT',
                'exp_fbf2_TGGC']        
+    
     for x in [fbf1oo, fbf2oo, fbf1sp, fbf2sp,
               fbf1old, fbf2old,
               ]:
@@ -130,7 +120,7 @@ if __name__ == '__main__':
         HTSeq.GenomicArray('auto', stranded=True),
         'bedgraphs_unnorm/corr/fbf2_oo_+.wig',
         'bedgraphs_unnorm/corr/fbf2_oo_-.wig')
-    print "OO FBF-1 vs FBF-2"
+    print("OO FBF-1 vs FBF-2")
     text["OO FBF-1 vs FBF-2"] = scatterplot_correlation_by_wig.run(
         args, ga, a='oo_fbf1.txt', b='oo_fbf2.txt')
     ga['combined_fbf1.txt'] = add_a_bedgraph(
@@ -141,7 +131,7 @@ if __name__ == '__main__':
         HTSeq.GenomicArray('auto', stranded=True),
         'bedgraphs_unnorm/corr/fbf2_sp_+.wig',
         'bedgraphs_unnorm/corr/fbf2_sp_-.wig')
-    print "SP FBF-1 vs FBF-2"
+    print("SP FBF-1 vs FBF-2")
     text["SP FBF-1 vs FBF-2"] = scatterplot_correlation_by_wig.run(
         args, ga, a='sp_fbf1.txt', b='sp_fbf2.txt')
     ga['combined_fbf1.txt'] = add_a_bedgraph(
@@ -152,7 +142,7 @@ if __name__ == '__main__':
         HTSeq.GenomicArray('auto', stranded=True),
         'bedgraphs_unnorm/corr/fbf2_old_+.wig',
         'bedgraphs_unnorm/corr/fbf2_old_-.wig')
-    print "SP FBF-1 vs FBF-2"
+    print("SP FBF-1 vs FBF-2")
     text["20deg FBF-1 vs FBF-2"] = scatterplot_correlation_by_wig.run(
         args, ga, 'old_fbf1_to_fbf2_n2.txt', 'old_fbf2.txt')
     text["20deg FBF-1 vs 25deg FBF-1"] = scatterplot_correlation_by_wig.run(
@@ -178,13 +168,13 @@ if __name__ == '__main__':
                 }
     corrs = []
     for k in text:
-        print text[k]
+        print(text[k])
         spearman = re.search('spearman rho: ([^\n]*)\n', text[k])
         if spearman is not None:
             spearman = spearman.groups()[0]
         pearson = re.search('Pearson R: ([^\n]*)\n', text[k]).groups()[0]
-        print spearman
-        print pearson
+        print(spearman)
+        print(pearson)
         fbf1_targs = set(
             pandas.read_csv(to_peaks[k][0], sep='\t')['gene_name'].tolist())
         fbf2_targs = set(

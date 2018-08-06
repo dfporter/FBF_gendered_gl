@@ -27,16 +27,26 @@ class countsColumnsNaming():
     
     def shorten_names_and_subset_columns(self):
         def clean(n):
-            
-            n = re.sub('fbf', 'F', re.sub('rt.*and.*', '', re.sub('exp_', '',
-                    re.sub('control_', 'c_', re.sub('_counts.txt', '',
-                    re.sub('[A-Z]{4}', 'i', n)))
-                          )))
 
-            n = re.sub('F_sp_', 'SP FBF', n)
-            n = re.sub('F_oo_', 'OO FBF', n)
-            n = re.sub('F1_i', 'LT FBF1', n)
-            n = re.sub('F2_i', 'LT FBF2', n)
+            n = re.sub('_counts.txt', '', n)
+            n = re.sub('exp_fbf1_sp', 'SP FBF1', n)
+            n = re.sub('exp_fbf2_sp', 'SP FBF2', n)
+            n = re.sub('exp_fbf1_oo', 'OO FBF1', n)
+            n = re.sub('exp_fbf2_oo', 'OO FBF2', n)
+            n = re.sub('exp_fbf_sp', 'SP FBF', n)
+            n = re.sub('exp_fbf_oo', 'OO FBF', n)
+            n = re.sub('contol_', 'c_', n)
+            
+            #n = re.sub('fbf', 'F', re.sub('rt.*and.*', '', re.sub('exp_', '',
+            #        re.sub('control_', 'c_', re.sub('_counts.txt', '',
+            #        re.sub('[A-Z]{4}', 'i', n)))
+            #              )))
+
+
+            #n = re.sub('F_sp_', 'SP FBF', n)
+            #n = re.sub('F_oo_', 'OO FBF', n)
+            #n = re.sub('F1_i', 'LT FBF1', n)
+            #n = re.sub('F2_i', 'LT FBF2', n)
             return n  # 12 FBF + 12 controls
         
         known = []
@@ -47,13 +57,14 @@ class countsColumnsNaming():
                 continue
                 
             rep = 1
-            name = clean(col) + '_' + str(rep)
+            name = clean(col) #+ '_' + str(rep)
             
             while (name in known):
                 rep += 1
                 if rep > 9:
                     break
-                name = name[:-1] + str(rep)
+                #name = name[:-1] + str(rep)
             known.append(name)
-            
+        
+        print('>', known)
         self.counts_df.columns = known
