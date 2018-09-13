@@ -82,26 +82,33 @@ def aspect_equal(ax1):
     ax1.set_aspect((x1-x0)/(y1-y0))
     
 def cor_with_abundance_by_program(pk):
+    
     blackline = mlines.Line2D([], [], color='black', linewidth=0.01) 
     redline = mlines.Line2D([], [], color='red', linewidth=0.01)
     pinkline = mlines.Line2D([], [], color='pink', linewidth=0.01)
     blueline = mlines.Line2D([], [], color='blue', linewidth=0.01)
     orangeline = mlines.Line2D([], [], color='orange', linewidth=0.01)
     greenline = mlines.Line2D([], [], color='green', linewidth=0.01)
+
     df = pk.df
     ortiz_df = pandas.read_csv(
         '/opt/lib/ortiz/DESeq_genes_in_gonad.txt', sep='\t')
+    
     id_to_fog3_height = dict(zip(df['gene_name'].tolist(), df['exp_reads'].tolist()))
     id_to_height = get_id_to_val(id_to_fog3_height, null_return=0)
     id_to_program = get_id_to_val(pk.program, null_return='')
-    # 'Expression in  fog-2 gonads (RPKM)' is actuall the oogenic sample.
+    
+    # 'Expression in  fog-2 gonads (RPKM)' is actually the oogenic sample.
     # Fix this.
+    
     ortiz_df['Sp. RPKM'] = ortiz_df['Expression in  fog-2 gonads (RPKM)']
     ortiz_df['fog3 height'] = [id_to_height(x) for x in ortiz_df['Gene name'].tolist()]
     ortiz_df['Program'] = [id_to_program(x) for x in ortiz_df['WormBase ID (WS240)'].tolist()]
+
     # Subset to FOG-3 targets.
     fog3_targets = get_oo_sp_exp(ortiz_df[ortiz_df['fog3 height'] != 0].copy())
     oo, sp, ne = split_by_program(ortiz_df)
+    
     oo_exp = rotate(get_oo_sp_exp(oo))
     sp_exp = rotate(get_oo_sp_exp(sp))
     ne_exp = rotate(get_oo_sp_exp(ne))
@@ -351,6 +358,7 @@ def get_limits(x, y):
     c = np.nanmin(y)
     d = np.nanmax(y)
     return [a, b, c, d]
+
 
 if __name__ == '__main__':
     indir = sys.argv[1]

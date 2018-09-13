@@ -17,7 +17,7 @@ class vennPainter():
     """All functions return a venn object and do nothing else.
     """
     def old_fbf1_vs_fbf2(self, ax):
-        a = self.targs['old_fbf1_to_fbf2_n2']
+        a = self.targs['old_fbf1']
         b = self.targs['old_fbf2']
         _lab = ('$\mathrm{^{20^\circ C}Oo. FBF}$-$\mathrm{1}$',
                 '$\mathrm{^{20^\circ C}Oo. FBF}$-$\mathrm{2}$')
@@ -35,7 +35,7 @@ class vennPainter():
             b = self.targs['OO FBF (25°C)']
             c = self.targs['OO FBF-2 (20°C)']
         else:
-            a = self.targs['old_fbf1_to_fbf2_n2']
+            a = self.targs['old_fbf1']
             b = self.targs['oo_both']
             c = self.targs['old_fbf2']
             
@@ -56,7 +56,7 @@ class vennPainter():
         return v_plt
 
     def new_oo_vs_old_fbf1(self, ax):
-        a = self.targs['old_fbf1_to_fbf2_n2']
+        a = self.targs['old_fbf1']
         b = self.targs['oo_both']
         _lab = ('$\mathrm{^{20^\circ C}Oo. FBF}$-$\mathrm{1}$',
                 '$\mathrm{^{25^\circ C}Oo. FBF}$')
@@ -91,7 +91,7 @@ class vennPainter():
             a = self.targs['OO FBF (20°C, both FBFs)']
             b = self.targs['OO FBF (25°C)']            
         else:
-            a_1 = self.targs['old_fbf1_to_fbf2_n2']
+            a_1 = self.targs['old_fbf1']
             a_2 = self.targs['old_fbf2']
             a = a_1 & a_2
             b = self.targs['oo_both']
@@ -101,7 +101,7 @@ class vennPainter():
         return self.set_venn2_red(v_plt)
     
     def new_sp_vs_old_fbf(self, ax):
-        a = self.targs['old_fbf1_to_fbf2_n2']
+        a = self.targs['old_fbf1']
         b = self.targs['sp_both']
         c = self.targs['old_fbf2']
         _lab = ('$\mathrm{^{20^\circ C}Oo. FBF}$-$\mathrm{1}$',
@@ -284,10 +284,9 @@ if __name__ == '__main__':
     v.new_oo_vs_old_both_fbfs(ax[1][0])
     v.oo_vs_sp(ax[1][1])
     plt.tight_layout()
-    plt.savefig('Fig 1 venns.pdf')
+    plt.savefig('figs/Fig 1 venns.pdf')
     plt.clf()
     plt.close()
-    
     
     plt.rc('font', size=10)
     fig, ax = plt.subplots(2, 3)
@@ -298,7 +297,7 @@ if __name__ == '__main__':
     v.new_sp_vs_old_fbf(ax[1][2])
     v.oo_vs_sp(ax[1][1])
     plt.tight_layout()
-    plt.savefig('Fig S1 venns.pdf')
+    plt.savefig('figs/Fig S1 venns.pdf')
     plt.clf()
     plt.close()
     #df = v.heatmap_binary()
@@ -323,7 +322,7 @@ if __name__ == '__main__':
     plt.pcolor(df)
     #plt.yticks(np.arange(0.5, len(df.index), 1), df.index)
     plt.xticks(np.arange(0.5, len(df.columns), 1), df.columns)
-    plt.savefig('heatmap.pdf')
+    plt.savefig('figs/heatmap.pdf')
      
 
     import numpy as np 

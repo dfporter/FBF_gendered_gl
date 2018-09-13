@@ -127,6 +127,8 @@ spermatogenic and oogenic germlines, and {2} were robust peaks.""".format(
         plt.savefig(fname); plt.clf(); plt.close()
     make_venn(i_b['Gene name'].tolist(),
      sp_targs, oo_targs, 'Block I', 'SP', 'OO', 'figs/block_i_venn.pdf')
+
+
 def run():
     #v = volcanoMaker()
     compare_temp_changes_vs_abundance()

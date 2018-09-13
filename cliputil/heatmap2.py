@@ -28,13 +28,25 @@ class heatmapMaker(figureMaker.figureMaker,
                   ):
 
     def load_counts(self, fname='combined_counts.txt', log_scale=True,
-                        only_combined_datasets=True):
+                        only_combined_datasets=True,
+                        total_read_numbers='total_read_numbers.txt'):
+
         self.load_counts_file(fname=fname, log_scale=True,
-                        only_combined_datasets=only_combined_datasets, style='heatmap')
+                        only_combined_datasets=only_combined_datasets, style='heatmap',
+                        total_read_numbers=total_read_numbers)
+
         self.rm_non_target_rnas(only_combined_datasets=only_combined_datasets)
+
+        self.rm_controls()
+        
+        if '_no_feature' in self.counts_df:
+            print("_no_feature was not removed from counts file.")
+        
         print("""heatmapMaker.load_counts(): used {0} targets datasets to narrow  self.counts_df
         into {1} rows.""".format(len(self.targs), len(self.counts_df.index)))
         
+        return self.counts_df
+
     def rm_non_target_rnas(self, cutoff=1, only_combined_datasets=False):
         all_targets = collections.defaultdict(int)
         
@@ -53,9 +65,18 @@ class heatmapMaker(figureMaker.figureMaker,
                 continue
             for name in self.targs[k]:
                 all_targets[name] += 1
-                
+
         print("heatmap.rm_non_target_rnas(): self.targs.keys(): ", self.targs.keys())
         print("Targets in peaks files: ", len(all_targets))
+
+        if '_ambiguous' in all_targets:
+            del all_targets['_ambiguous']
+            print('_ambiguous was listed as a target in counts file. Removed.')
+
+        if '_no_feature' in all_targets:
+            del all_targets['_no_feature']
+            print('_no_feature was listed as a target in counts file. Removed.')
+        #all_targets -= set(['_ambiguous', '_no_feature'])
 
         self.counts_df = self.counts_df.loc[[
             #((x in all_targets) and (all_targets[x] >= cutoff)) for x in self.counts_df.index]]
@@ -96,8 +117,9 @@ class heatmapMaker(figureMaker.figureMaker,
         self.counts_df['OO RPKM'] = [self.gl_pkl.name_to_oo_rpkm(x) for \
                                      x in self.counts_df.index]
         #self.counts_df['SP/OO FC'] = [self.gl_pkl.name_to_fc(x) for \
-        #                             x in self.counts_df.index]
+        #                             x in self.counts_df.index]        
 
+    using_countsIO_function = """
     def rm_controls(self):
         for k in ['c_sp_1', 'c_n2_1', 'c_oo_1', 'ave_neg']:
             if k in self.counts_df.columns:
@@ -114,6 +136,7 @@ class heatmapMaker(figureMaker.figureMaker,
         
         for x in set(to_del):
             del self.counts_df[x]
+    """
 
     def heatmap_counts_file(self, fname=None):
         
@@ -261,8 +284,6 @@ def make_fig(df):
         else:
             return ''
         
-
-    
     # list_of_rows_in_same_order_as_in_heatmap:
     rowlab = [df.iloc[i].name for i in res.dendrogram_row.reordered_ind]
     
@@ -277,7 +298,6 @@ def make_fig(df):
     
 
     new_labels = [label_if_positive(t._text) for t in res.ax_heatmap.yaxis.get_majorticklabels()]
-    print(new_labels)
     res.ax_heatmap.yaxis.set_ticklabels(
         new_labels)
     
@@ -586,9 +606,9 @@ class tableMaker(object):
 
     def define_targets(self):
         self.peaks = {}
-        from vennMaker import fname_to_label, label_to_fname
+        from figureMaker import fname_to_label, label_to_fname
         for dataset in [
-            'oo_both', 'sp_both', 'old_fbf1_to_fbf2_n2', 'old_fbf2']:
+            'oo_both', 'sp_both', 'old_fbf1', 'old_fbf2']:
             fname = label_to_fname[dataset]
             self.peaks[dataset] = peaksList()
             self.peaks[dataset].read_csv(fname)
@@ -617,18 +637,25 @@ class tableMaker(object):
 #label_to_fname = dict(zip(fname_to_label.values(), fname_to_label.keys()))
 
 if __name__ == '__main__':
+
     print("Creating heatmapMaker() object()...")
     v = heatmapMaker()
+    
     print("Created heatmapMaker() object(). Loading peaks files...")
     v.load_peaks_csv_files(figureMaker.label_to_fname)  # Global from vennMaker used.
+    
     plt.clf()
     plt.rc('font', size=1)
     fig, ax = plt.subplots()
-    df = v.load_counts_file()
+
+    print("Loading combined counts file combined_counts.txt")
+    df = v.load_counts(fname='combined_counts.txt')
+
     tableM = tableMaker(v)
     tableM.define_groups({'I': blocki, 'II': blockii, 'III': blockiii})
     tableM.make_table()
     #sys.exit()
+
     # Create the heatmap figure.
     with sns.plotting_context("paper", font_scale=0.8):
         plt.clf()
@@ -636,38 +663,8 @@ if __name__ == '__main__':
         g = make_fig(df)
         plt.clf()
         plt.close()
-    # Create the database vs database correlation block figure.
-    with sns.plotting_context("paper", font_scale=1):
-        #df = v.load_counts_file()
-        df = df[['SP FBF_1', 'SP FBF_2', 'SP FBF_3',
-             'OO FBF_1', 'OO FBF_2', 'OO FBF_3',
-             'LT FBF1_1', 'LT FBF1_2', 'LT FBF1_3',
-             'LT FBF2_1', 'LT FBF2_2', 'LT FBF2_3']]
-        col_relabel_d = col_relabel()
-        df.columns = [col_relabel_d[x] for x in df.columns]
-        pwdf = df.corr('spearman')
-        mask = np.zeros_like(pwdf)
-        mask[np.triu_indices_from(mask)] = True
-        np.place(mask, mask<1, 2)
-        np.place(mask, mask==1, 0)
-        np.place(mask, mask==2, 1)
-        cmap = sns.cubehelix_palette(
-            len(df.index), light=.7, dark=.2, reverse=False,
-            start=1, rot=-2, as_cmap=True)
-        cmap = plt.get_cmap('Greys')
-        with sns.axes_style("white"):
-            ax = sns.heatmap(pwdf, cmap=cmap, annot=True,
-                            #col_cluster=False,
-                            #row_cluster=False,
-                            mask=mask)
-#        ax.set_xticklabels(rotation=0)
-#        plt.yticks(rotation=45)
-#        plt.setp(ax.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
-#        locs, labels = plt.yticks()
-#        plt.setp(labels, rotation=45)
-        print('--')
-        plt.savefig('figs/Fig 2 Spearman corr.pdf')
-#    mat = df.as_matrix()
+    
+
     nah_dog = '''
     # clustering
     import sklearn

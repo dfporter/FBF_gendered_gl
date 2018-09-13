@@ -55,7 +55,7 @@ class peakSet(object):
     def write_tables(self, dirname):
         pass
 
-def filename_and_label_mappings():
+def filename_and_label_mappings(args):
     
     unfiltered = './combined_unfiltered/'
     filtered = './combined_filtered/'
@@ -68,7 +68,22 @@ def filename_and_label_mappings():
             else:
                 raise IOError("Aborting because output folder exists.")
     
-    fname_to_label = {
+    if args.filter:
+
+        fname_to_label = {
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_unfiltered/sp_fbf2.txt': 'sp_fbf2',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_unfiltered/sp_fbf1.txt': 'sp_fbf1',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_unfiltered/sp_fbf.txt': 'sp_both',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_unfiltered/oo_fbf1.txt': 'oo_fbf1',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_unfiltered/oo_fbf2.txt': 'oo_fbf2',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_unfiltered/oo_fbf.txt': 'oo_both',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_unfiltered/old_fbf1.txt': 'old_fbf1',
+#'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_unfiltered/old_fbf1_to_fbf2_n2.txt': 'old_fbf1_to_fbf2_n2',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_unfiltered/old_fbf2.txt': 'old_fbf2',
+        }
+
+    else:
+        fname_to_label = {
 # Uncommented before initial submission
 #'/groups/Kimble/Common/fbf_celltype/combined_unfiltered/old_fbf2.txt': 'old_fbf2',
 #'/groups/Kimble/Common/fbf_celltype/combined_unfiltered/old_fbf1.txt': 'old_fbf1',
@@ -109,9 +124,9 @@ def filename_and_label_mappings():
 #'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/oo_fbf2/07_04_PM/peaks/combined_07_04_PM/null_hyp_4.txt': 'oo_fbf2',
 #'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/sp_fbf2/04_13_PM/peaks/combined_04_13_PM/null_hyp_4.txt': 'sp_fbf2',
 
-'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/combined_unfiltered/old_fbf1_to_fbf2_n2.txt': 'old_fbf1_to_fbf2_n2',
-'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/combined_unfiltered/old_fbf2.txt': 'old_fbf2',
-'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/combined_unfiltered/old_fbf1.txt': 'old_fbf1',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/low_temperature_25C_n2/combined_unfiltered/old_fbf1_to_fbf2_n2.txt': 'old_fbf1_to_fbf2_n2',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/low_temperature_25C_n2/combined_unfiltered/old_fbf2.txt': 'old_fbf2',
+'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/low_temperature_25C_n2/combined_unfiltered/old_fbf1.txt': 'old_fbf1',
 '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/combined_unfiltered/oo_both.txt': 'oo_both',
 '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/combined_unfiltered/oo_fbf1.txt': 'oo_fbf1',
 '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/combined_unfiltered/oo_fbf2.txt': 'oo_fbf2',
@@ -120,6 +135,14 @@ def filename_and_label_mappings():
 '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/combined_unfiltered/sp_fbf2.txt': 'sp_fbf2',
 '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/combined_unfiltered/sp_fbf.txt': 'sp_fbf',
 '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/individual_clip/combined_unfiltered/oo_fbf.txt': 'oo_fbf',
+
+#'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/low_temperature_25C_n2/individual_clip/FBF2/09_28_PM/peaks/combined_09_28_PM/null_hyp_4.txt': 'old_fbf2',
+#'/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/low_temperature_25C_n2/individual_clip/FBF1/07_38_PM/peaks/combined_07_38_PM/null_hyp_4.txt': 'old_fbf1',
+
+#'/groups/Kimble/Common/fbf_celltype/individual_clip/old_fbf1_to_fbf2_n2/09_39_PM/peaks/combined_09_39_PM/null_hyp_4.txt': 'old_fbf1_to_fbf2_n2',
+#'/groups/Kimble/Common/fbf_celltype/individual_clip/old_fbf1/11_01_PM/peaks/combined_11_01_PM/null_hyp_4.txt': 'old_fbf1',
+#'/groups/Kimble/Common/fbf_celltype/individual_clip/old_fbf2/old_fbf2/peaks/combined_old_fbf2/null_hyp_4.txt': 'old_fbf2',
+
 }
     
     label_to_unfiltered_output_file = dict([
@@ -138,7 +161,7 @@ def filename_and_label_mappings():
 def run(args):
     
     (unfiltered, filtered, fname_to_label, label_to_unfiltered_output_file,
-     label_to_filtered_output_file) = filename_and_label_mappings()
+     label_to_filtered_output_file) = filename_and_label_mappings(args)
      
     # For the null_hyp_4.txt files found in args.input, make peaks objects, add bedgraph data,
     # and return a list of the peaks objects.
@@ -207,27 +230,30 @@ def report(dirname):
             print("{}, {}: minimum {} maximum {}".format(
                 os.path.basename(f), col, _min, _max))
 
-def read_dir(dirname):
+
+def read_dir(args):
+    
+    dirname = args.input
     
     print(dirname)
     
     (unfiltered, filtered, fname_to_label, label_to_unfiltered_output_file,
-     label_to_filtered_output_file) = filename_and_label_mappings()
+     label_to_filtered_output_file) = filename_and_label_mappings(args)
      
     for f in glob.glob(dirname + '/*txt'):
         f = os.path.realpath(f)
         
         if re.search('old_fbf1.txt', f):
-            cutoff = 4#4
-            unnorm_cutoff = 4#6
+            cutoff = 20#4
+            unnorm_cutoff = 50#4#6
         
         elif re.search('old_fbf2.txt', f):
-            cutoff = 2#30
-            unnorm_cutoff = 30#30
+            cutoff = 5#30
+            unnorm_cutoff = 20#30#30
         
         elif re.search('old_fbf1_to_fbf2_n2.txt', f):
-            cutoff = 3#40
-            unnorm_cutoff = 40#60
+            cutoff = 25#40
+            unnorm_cutoff = 50#40#60
         
         #elif re.search('sp_both.txt', f):
         #    cutoff = 5#2#5
@@ -235,14 +261,17 @@ def read_dir(dirname):
 
         elif re.search('sp_fbf.txt', f):
             cutoff = 5#5
-            unnorm_cutoff = 20#50     
+            unnorm_cutoff = 20#50  
 
+        elif re.search('sp_fbf\d.txt', f):
+            cutoff = 2#5
+            unnorm_cutoff = 10#50  
 #        elif re.search('oo_both.txt', f):
 #            cutoff = 2#3
 #            unnorm_cutoff = 5#10
 
         elif re.search('oo_fbf.txt', f):
-            cutoff = 2.5#3
+            cutoff = 2.5#2.5
             unnorm_cutoff = 20#5#10
 
         elif re.search('oo_fbf\d.txt', f):
@@ -267,6 +296,7 @@ def read_dir(dirname):
         
         filtp.write_table(label_to_filtered_output_file[_p.label])
 
+
 def find_lowest_cutoffs_of_positive_controls(dirname):
 
     positives = "gld-1,htp-1,htp-2,mpk-1,him-3,fbf-1,lip-1,syp-2,fbf-2,fog-1,fem-3,syp-3,gld-3,fog-3,egl-4".split(',')
@@ -283,7 +313,8 @@ def find_lowest_cutoffs_of_positive_controls(dirname):
         positive_rows.drop_duplicates(subset='gene_name', inplace=True)
         print('>{}'.format(os.path.basename(f)))
         print(positive_rows[['gene_name', 'ratio', 'unnorm_ratio']])
-        
+
+
 if __name__ == '__main__':          
     
     p = argparse.ArgumentParser(__doc__)
@@ -322,7 +353,7 @@ peaks with coverages added and columns simplified.',
         find_lowest_cutoffs_of_positive_controls(args.input)
     
     elif args.filter:
-        read_dir(args.input)
+        read_dir(args)
     
     else:
         run(args)#, lib)

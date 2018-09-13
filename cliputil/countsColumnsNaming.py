@@ -45,8 +45,22 @@ class countsColumnsNaming():
 
             #n = re.sub('F_sp_', 'SP FBF', n)
             #n = re.sub('F_oo_', 'OO FBF', n)
-            #n = re.sub('F1_i', 'LT FBF1', n)
-            #n = re.sub('F2_i', 'LT FBF2', n)
+            n = re.sub('exp_fbf1_TGGC', 'LT FBF1_1', n)
+            n = re.sub('exp_fbf1_GGTT', 'LT FBF1_2', n)
+            n = re.sub('exp_fbf1_CGGA', 'LT FBF1_3', n)  
+            n = re.sub('exp_fbf2_CGGA', 'LT FBF2_1', n)
+            n = re.sub('exp_fbf2_GGTT', 'LT FBF2_2', n)
+            n = re.sub('exp_fbf2_TGGC', 'LT FBF2_3', n)
+
+            # Replicates for FBF1 and FBF2 at 20C:
+#exp_bed1: ./bed_collapsed/exp_fbf1_TGGC.bed
+#exp_bed2: ./bed_collapsed/exp_fbf1_GGTT.bed
+#exp_bed3: ./bed_collapsed/exp_fbf1_CGGA.bed
+
+#exp_bed1: ./bed_collapsed/exp_fbf2_CGGA.bed
+#exp_bed2: ./bed_collapsed/exp_fbf2_GGTT.bed
+#exp_bed3: ./bed_collapsed/exp_fbf2_TGGC.bed
+
             return n  # 12 FBF + 12 controls
         
         known = []
@@ -56,14 +70,14 @@ class countsColumnsNaming():
                 known.append(x)
                 continue
                 
-            rep = 1
+            #rep = 1
             name = clean(col) #+ '_' + str(rep)
             
-            while (name in known):
-                rep += 1
-                if rep > 9:
-                    break
-                #name = name[:-1] + str(rep)
+            #while (name in known):
+            #    rep += 1
+            #    if rep > 9:
+            #        break
+            #    name = name[:-1] + str(rep)
             known.append(name)
         
         print('>', known)

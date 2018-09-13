@@ -30,7 +30,7 @@ def guess_bedgraph(path, normed=True):
     """From a given path, return a list of (+, -) filenames of begraphs.
     """
 
-    only_replicates = True
+    only_replicates = False
     up = up3(path)
 
     if not os.path.exists(up):
@@ -45,11 +45,11 @@ def guess_bedgraph(path, normed=True):
         bgn = os.path.join(up, 'bedgraph_unnorm')
 
     if not os.path.exists(bgn):
-        print("no %s" % bgn)
+        print("guess_bedgraph(): no %s" % bgn)
         return
 
     else:
-        print("Found {0}.".format(bgn))
+        print("guess_bedgraph(): Found {0}.".format(bgn))
 
     bedgraphs = set()
     for g in glob.glob(bgn + '/*_+.wig'):
@@ -60,7 +60,7 @@ def guess_bedgraph(path, normed=True):
         pos, neg = (guess + '_+.wig', guess + '_-.wig')
 
         if any([not os.path.exists(_x) for _x in [pos, neg]]):
-            print("no %s" % g)
+            print("guess_bedgraph(): no %s" % g)
             return
 
         # Our positive strand bedgraph basename, which exists.
@@ -68,26 +68,25 @@ def guess_bedgraph(path, normed=True):
         b = os.path.basename(pos)
 
         #Any reason to ignore this bedgraph?
-        if re.search('\Aall_', b):
+        if re.search('\Aall_', b) or re.search('\Acontrol_n2_[-\+].wig', b):
+            print("guess_bedgraph(): ignoring {}".format(b))
             continue
 
-        if re.search('\Acontrol_n2_[-\+].wig', b):
-            continue
-
-        if re.search('old_fbf', pos):
-            bedgraphs.add((pos, neg))
-            continue
+        #if re.search('old_fbf', pos):
+        #    bedgraphs.add((pos, neg))
+        #    continue
 
         if only_replicates and (
             #(re.match('control_[^_]*_\+.wig', b) or \
             (
              re.match('exp_fbf\w_[^_]*_\+.wig', b))):
-            print("Skipping %s" % (b))
+            print("guess_bedgraph(): Skipping %s" % (b))
             continue
 
         # If no reason to ignore, add the +/- bedgraph filenames.
         bedgraphs.add((pos, neg))
 
+    print("guess_bedgraph(): returning {}".format(bedgraphs))
     return bedgraphs
         
 def run(args):
@@ -152,6 +151,7 @@ def add_reads_from_bedgraphs(_p, bedgraphs, normed=True):
     ga = {}
     
     if (bedgraphs is None) or (not bedgraphs):
+        print('add_reads_from_bedgraphs(): no bedgraphs found for {}'.format(_p.label))
         return False
     
     # Read bedgraphs into genomic arrays and add wig filenames to peaks object.

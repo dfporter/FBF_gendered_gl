@@ -88,8 +88,7 @@ class volcanoMaker(peaksList.peaksList):
 
     def gl_rnaseq(self, fname='/opt/lib/ortiz/DESeq_genes_in_gonad.txt'):
         """ Define the df and some useful dicts of GL RNA-seq."""
-        #self.gldf = pandas.read_csv(fname, sep='\t', index_col=False)
-        # This function sets self.ortiz as the df of fname,
+        # This function sets self.ortiz as the DataFrame of fname,
         # and defines variety of dicts for (gene name -> rpkm), 
         # (wb id -> rpkm), and (gene name -> log2 fold change). 
         self.read_sp_vs_oo()
@@ -269,10 +268,17 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
                     'Spermatogenic onl': "#0087B9",
                       'Oogenic and Spermatogenic': '#000000'}[prog]
 
+    @staticmethod
+    def color_if_sig_dif(x, y, x_cutoff=1, y_cutoff=0.01):
+        if abs(x) >= x_cutoff and y<=y_cutoff:
+            return 'r'
+        return 'k'
+
     def volcano_plot(
             self, xlabel='FBF spermatogenic/oogenic (log2)',
             output_name='figs/Fig 2D volcano.pdf',
-            reverse_x=False, ylim=(0, 20), xlim=(-9, 9)):
+            reverse_x=False, ylim=(0, 20), xlim=(-9, 9),
+            temp_cf_settings=False):
         
         colors = ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce",
               "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
@@ -281,6 +287,9 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
         print('-------volcano_plot() self.clipdf.index = ', len(self.clipdf.index))
         
         cs = [self.id_to_color(x) for x in clip_deseq['gene_id'].tolist()]
+        if temp_cf_settings:
+            cs = [self.color_if_sig_dif(x, y) for x, y in zip(
+                clip_deseq['log2FoldChange'].tolist(), clip_deseq['padj'].tolist())]
 
         x_vals = clip_deseq['log2FoldChange'].tolist()
         if reverse_x:
@@ -297,28 +306,24 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
         plt.rcParams['lines.markeredgewidth'] = 0.0
         fig = plt.figure()
         
-        s = plt.scatter(x_vals, y_vals, color=cs, 
-                        alpha=0.4,
-                    marker='o',
-                    s=5)
+        s = plt.scatter(
+            x_vals, y_vals, color=cs, alpha=0.4, marker='o', s=5)
         
         s.set_lw(0)
         to_label = ['sygl-1', 'lst-1', 'fog-1', 'fog-3', 'fem-3', 'mpk-1',
                     ]#'linc-7', 'linc-29', 'linc-4']
-        #def _label(x): return x if x in to_label else ''
         
         labels = clip_deseq['gene_name'].tolist()
+
         for label, x, y in zip(labels, x_vals, y_vals):
-            if label in to_label:
+            if not(temp_cf_settings) and (label in to_label):
+
                 plt.annotate(
                     label, xy=(x, y), xytext=(10, 5),
                     textcoords= 'offset points',
                     fontsize=6,
                     arrowprops=dict(arrowstyle='->'))
                 
-        #print plt.rcParams['lines.markeredgewidth']
-        #print type(s)
-        #plt.ylim(0, 20)
         plt.ylim(*ylim)
         plt.xlim(*xlim)
         
@@ -509,6 +514,7 @@ def write_excel_of_deseq(df_in, header='SPvOO'):
 
 
 def run():
+    # Volcano plot for LT vs HT (20C vs 25C, oogenic).
     v = volcanoMaker()
     v.gl_rnaseq()
     v.read_clip_deseq_csv('tables/lt_fbf1_and_2_vs_ht_fbf_deseq.txt')
@@ -516,10 +522,12 @@ def run():
     v.read_sp_vs_oo_as_programs()
     write_excel_of_deseq(v.clipdf.copy(), header='HTvLT')
     v.table_of_stats()
-    #v.volcano_plot(
-    #    reverse_x=True,
-    #    xlabel='FBF binding: high temperature/low temperature (log2)',
-    #    output_name='figs/Fig Sx volcano_of_temp_effect.pdf')
+    v.volcano_plot(
+        reverse_x=True, temp_cf_settings=True, xlim=(-3, 3),
+        xlabel='FBF binding: high temperature/low temperature (log2)',
+        output_name='figs/Fig Sx volcano_of_temp_effect.pdf')
+
+    # Volcano plot for OO vs SP (25C).
     print("\n\n\n***SP vs OO***\n\n\n")
     v = volcanoMaker()
     v.gl_rnaseq()

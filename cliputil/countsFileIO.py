@@ -6,6 +6,8 @@ import importlib
 
 rl = importlib.reload
 rl(countsColumnsNaming)
+
+nope = """
 to_len={
 
 'exp_fbf_oo_rt9_and_1_counts.txt': 2108384,
@@ -106,18 +108,31 @@ to_len={
 "exp_fbf_sp_2_counts.txt": 1592964,
 "exp_fbf_sp_3_counts.txt": 1634294,
 }
-
+"""
 
 class countsFileIO(countsColumnsNaming.countsColumnsNaming):
     
     def load_counts_file(self, fname='combined_counts.txt', log_scale=True,
-                        only_combined_datasets=True, style='heatmap'):
+                        only_combined_datasets=True, style='heatmap',
+                        total_read_numbers='total_read_numbers.txt'):
         
-        self.to_len = to_len
+        self.to_len = {}
+
+        with open(total_read_numbers) as f:
+            for li in f:
+                (_fname, read_count) = li.rstrip('\n').split('\t')
+                self.to_len[_fname.split('/')[-1]] = int(read_count)
         
+        #fname = 'combined_counts.txt'
+        
+        print("Loading {} as combined counts file.".format(fname))
         self.counts_df = pandas.read_csv(
-            fname, sep='\t', index_col=False)#.head(1000)
-        
+            fname, sep='\t', header=0, index_col=False)#.head(1000)
+
+        if 'gene' not in self.counts_df.columns:
+            self.counts_df['gene'] = self.counts_df.index
+            print("Set gene column in counts_file {}".format(self.counts_df['gene'].head(2)))
+
         # We only keep the LT FBF replicates, the combined SP/OO FBF
         # replicates, and the uncombined LT and HT controls for normalization.
         
@@ -125,7 +140,7 @@ class countsFileIO(countsColumnsNaming.countsColumnsNaming):
 
             self.counts_df = self.counts_df[[x for x in self.counts_df.columns if (
                 not(self.name_is_one_of_11_ht_reps(x)) or x=='gene' or re.search('control', x))]]
-            
+
             is_rrna = [x for x in self.counts_df.gene if re.match('rrn-\d+.*', x)]
             print("RNA genes: {0}\n{1}\n".format(len(is_rrna), is_rrna))
 
@@ -139,9 +154,47 @@ class countsFileIO(countsColumnsNaming.countsColumnsNaming):
                 self.counts_df = self.scale_columns(self.counts_df)
 
             self.rm_controls()
+
+            self.counts_df = self.counts_df.loc[[
+                (x not in ['_no_feature', '_ambiguous']) for x in self.counts_df.index]]
         
+        else:
+            
+            self.counts_df = self.counts_df[[x for x in self.counts_df.columns if (
+                not(self.name_is_one_of_11_ht_reps(x)) or x=='gene' or re.search('control', x))]]
+
+            is_rrna = [x for x in self.counts_df.gene if re.match('rrn-\d+.*', x)]
+            print("RNA genes: {0}\n{1}\n".format(len(is_rrna), is_rrna))
+
+            self.counts_df.set_index('gene', inplace=True)
+            self.counts_df.drop(is_rrna, inplace=True)
+            self.shorten_names_and_subset_columns()
+
+            self.rm_controls()
+
+            self.counts_df = self.counts_df.loc[[
+                (x not in ['_no_feature', '_ambiguous']) for x in self.counts_df.index]]
+            
+
         return self.counts_df
     
+    def rm_controls(self):
+        for k in ['c_sp_1', 'c_n2_1', 'c_oo_1', 'ave_neg']:
+            if k in self.counts_df.columns:
+                del self.counts_df[k]
+        combined_controls = set(['control_sp_counts.txt', 'control_oo_counts.txt',
+                             'control_n2_counts.txt'])
+        to_del = set([x for x in self.counts_df.columns if (\
+                    re.search('control.*matching.*', x) \
+                   or re.search('n2_oo_lane', x) \
+                    or re.search('\Ac_', x) \
+                   or re.search('control', x) # All controls removed. 
+                   )])
+        to_del = to_del - combined_controls
+        
+        for x in set(to_del):
+            del self.counts_df[x]
+
     def to_reads_per_mil(self, df):
         for col in [x for x in df.columns if (x != 'gene')]:
             df[col] = [1e6 * x/self.to_len[col] for x in df[col].tolist()]

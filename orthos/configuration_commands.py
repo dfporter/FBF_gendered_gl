@@ -24,7 +24,7 @@ test2=[<
 #-----------
 
 FbfOO25C=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S1 Peaks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/Table S1 Peaks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -33,7 +33,7 @@ FbfOO25C=[<
     >]
 
 Top500FbfOO25C=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S1 Peaks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/Table S1 Peaks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -44,7 +44,7 @@ Top500FbfOO25C=[<
     >]
 
 FbfSP25C=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S1 Peaks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/Table S1 Peaks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -53,7 +53,7 @@ FbfSP25C=[<
     >]
 
 Top500FbfSP25C=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S1 Peaks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/Table S1 Peaks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -64,7 +64,7 @@ Top500FbfSP25C=[<
     >]
     
 Fbf1_20C=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S1 Peaks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/Table S1 Peaks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -73,7 +73,7 @@ Fbf1_20C=[<
     >]
 
 Top500Fbf1_20C=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S1 Peaks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/Table S1 Peaks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -84,7 +84,7 @@ Top500Fbf1_20C=[<
     >]
 
 Fbf2_20C=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S1 Peaks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/Table S1 Peaks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -93,7 +93,7 @@ Fbf2_20C=[<
     >]
 
 Top500Fbf2_20C=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S1 Peaks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/Table S1 Peaks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -104,7 +104,7 @@ Top500Fbf2_20C=[<
     >]
     
 BlockI=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S6 Blocks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/File S6 Blocks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -113,7 +113,7 @@ BlockI=[<
     >]
     
 BlockII=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S6 Blocks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/File S6 Blocks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True
@@ -122,7 +122,7 @@ BlockII=[<
     >]
     
 BlockIII=[<
-    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/Table S6 Blocks.xls
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/File S6 Blocks.xls
     language=gene_name
     species=worm
     load_sheets_of_excel=True

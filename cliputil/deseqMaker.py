@@ -2,7 +2,7 @@
 import pandas, os, sys, collections, glob, re
 
 top_dir = '/groups/Kimble/Common/fbf_celltype/'  # Server.
-top_dir = '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/combined_filtered/'
+top_dir = '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/combined_filtered/'
 
 fname_to_label = {
 top_dir + '/old_fbf2.txt': 'old_fbf2',
@@ -186,9 +186,9 @@ class deseqMaker(object):
             'exp_fbf2_CGGA_counts.txt',
             'exp_fbf2_GGTT_counts.txt',
             'exp_fbf2_TGGC_counts.txt',
-            'exp_fbf_oo_rt11_and_6_counts.txt',
-            'exp_fbf_oo_rt2_and_13_counts.txt',
-            'exp_fbf_oo_rt9_and1_counts.txt']:
+            'exp_fbf_oo_1_counts.txt',
+            'exp_fbf_oo_2_counts.txt',
+            'exp_fbf_oo_3_counts.txt']:
             print(f)
             _f = re.sub('exp_fbf_oo_', 'fbf_ht-', f)
             _f = re.sub('exp_fbf1_', 'fbf_lt-1', _f)
@@ -205,15 +205,23 @@ class deseqMaker(object):
         df = pandas.read_csv(infile, sep='\t', index_col=False)
         
         out_cols = [
+            #'old_fbf1',
+            #'old_fbf2',
+            #'old_fbf1_to_fbf2_n2',
+            #'exp_fbf'
             'exp_fbf1_CGGA_counts.txt',
             'exp_fbf1_GGTT_counts.txt',
             'exp_fbf1_TGGC_counts.txt',
             'exp_fbf2_CGGA_counts.txt',
             'exp_fbf2_GGTT_counts.txt',
             'exp_fbf2_TGGC_counts.txt',
-            'exp_fbf_oo_rt11_and_6_counts.txt',
-            'exp_fbf_oo_rt2_and_13_counts.txt',
-            'exp_fbf_oo_rt9_and1_counts.txt']
+            'exp_fbf_oo_1_counts.txt',
+            'exp_fbf_oo_2_counts.txt',
+            'exp_fbf_oo_3_counts.txt',
+            #'exp_fbf_oo_rt11_and_6_counts.txt',
+            #'exp_fbf_oo_rt2_and_13_counts.txt',
+            #'exp_fbf_oo_rt9_and1_counts.txt'
+            ]
         df.index = df['gene']
         #df = df[['gene'] + out_cols].copy()
         print(df)

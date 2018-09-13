@@ -26,20 +26,35 @@ def id_to_gl_deseq_val(wbid, gl_deseq):
         return 0
 
 class scatterplotMaker(volcanoMaker.volcanoMaker):
+    """Make scatterplots.
+    Inherits from volcanoMaker, which inherits from peaksList.
+    """
 
     def scatterplot(
             self, clip_fname='tables/6_reps_sp_vs_oo.txt',
             outfname='figs/Fig 2C Scatterplot.pdf'):
-        print(clip_fname)
-        # Set self.gl_deseq as dict of (name -> row of deseq info).
+
+        print("Making a scatterplot for {}".format(clip_fname))
+
+        # Set self.gl_deseq as dict of (name -> row of deseq info), which calls
+        # peaksList.read_sp_vs_oo() to load RNA-seq programs.
         self.gl_rnaseq()
-        # Set self.df (as clip DESeq2 data).
+        
+        # Set self.clipdf (as clip DESeq2 data).
+        # volcanoMaker function. Calls volcanoMaker.gl_rnaseq() if it
+        # wasn't called before. Sets a has_ortiz column in self.clipdf based on
+        # the output of self.gl_rnaseq().
         self.read_clip_deseq_csv(clip_fname)
-        # Set self.program (dict by wbid) and adds Program column to self.df.
+        
+        # Set self.program (dict by wbid) and adds Program column to self.df,
+        # and, if self.clipdf exists, to self.clipdf.
+        # This is a peaksList function.
         self.read_sp_vs_oo_as_programs()
-        # Now the figure.
-        print(str(self.gl_deseq)[:1000])
-        clip_deseq = self.df[self.df['has_ortiz']]
+        
+        # Now the figure.        
+        # Only keep genes with Ortiz germline RNA-seq data.
+        clip_deseq = self.clipdf[self.clipdf['has_ortiz']]
+
         #clip_deseq = clip_deseq[clip_deseq['baseMean']>=50]
         gl_deseq_vals = [id_to_gl_deseq_val(x, self.gl_deseq) \
                          for x in clip_deseq['gene_name'].tolist()]

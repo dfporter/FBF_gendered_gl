@@ -42,6 +42,7 @@ def map_bed(bed_filename, features):
 #    counts = collections.collections.Counter()
     counts = collections.defaultdict(int)
     
+    total_reads = 0
     for line_num, (read_iv, number_of_reads), in enumerate(read_bed(bed_filename)):
         
         if line_num and (not line_num % 100000):
@@ -65,7 +66,9 @@ def map_bed(bed_filename, features):
             counts['_no_feature'] += number_of_reads            
         else:       
             counts['_ambiguous'] += number_of_reads
-            
+    
+        total_reads += number_of_reads
+
     print('sum %s' % bed_filename)
     print(sum([counts[x] for x in counts]))
     
@@ -89,6 +92,14 @@ def map_bed(bed_filename, features):
             f.write("{gid}\t{cts}\n".format(gid=gene_id, cts=counts[gene_id]))
             
     os.system('cp {a} counts/'.format(a=output_filename))
+
+    # Write the total read count in the bed file.
+    if not os.path.exists('total_read_numbers.txt'):
+        with open('total_read_numbers.txt', 'w') as f:
+            f.write('{}\t{}\n'.format(output_filename, total_reads))
+    else:
+        with open('total_read_numbers.txt', 'a') as f:
+            f.write('{}\t{}\n'.format(output_filename, total_reads))
 
 def fill_in_gaps(folder_name, gtf_filename):
     
@@ -227,6 +238,9 @@ def run(bed_folder=None, gtf_filename='', lib=None):
             
     features = get_gtf(gtf_path=gtf_filename)#'./genomes/Saccharomyces_cerevisiae.EF4.70.gtf')
     
+    if os.path.exists('total_read_numbers.txt'):
+        os.system('rm total_read_numbers.txt')
+        
     for bed_filename in glob.glob(bed_folder + '/*.bed'):
         print("Assigning reads from %s..." % bed_filename)
         

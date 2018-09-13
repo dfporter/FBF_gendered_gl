@@ -3,6 +3,10 @@ Comparing FBF iCLIP in differnt cell types
 
 Code for a paper on FBF in the gendered transcriptome. 
 
+# Need to check bc usage for the N2s in old FBFs.
+# Need to check filtering numbers for everything and record.
+
+
 Data download
 ======
 
@@ -58,7 +62,10 @@ For CSEQ parameters, the sam headers are (for example):
 @SQ	SN:MtDNA	LN:13794
 @PG	ID:STAR	PN:STAR	VN:STAR_2.4.2a	CL:/home/users/dfporter/dfp_scratch/very_temp/STAR-STAR_2.4.2a/bin/Linux_x86_64/STAR   --runThreadN 16   --genomeDir /home/users/dfporter/dfp_scratch/very_temp/STAR-STAR_2.4.2a/bin/Linux_x86_64/indexes/   --readFilesIn ../temp_clipped/SRR3715268.fastq      --outFileNamePrefix SRR3715268_   --outSAMunmapped Within   --outFilterMultimapNmax 3   --outFilterMismatchNmax 2   --winAnchorMultimapNmax 10000   --seedSearchStartLmax 6   --alignIntronMax 1   --alignTranscriptsPerReadNmax 50000   --alignEndsType Local   --sjdbGTFfile /home/users/dfporter/dfp_scratch/very_temp/STAR-STAR_2.4.2a/bin/Linux_x86_64/indexes/sjdb.txt   --sjdbGTFtagExonParentTranscript transcript_id
 @CO	user command line: /home/users/dfporter/dfp_scratch/very_temp/STAR-STAR_2.4.2a/bin/Linux_x86_64/STAR --alignIntronMax 1 --sjdbGTFfile /home/users/dfporter/dfp_scratch/very_temp/STAR-STAR_2.4.2a/bin/Linux_x86_64/indexes/sjdb.txt --genomeDir /home/users/dfporter/dfp_scratch/very_temp/STAR-STAR_2.4.2a/bin/Linux_x86_64/indexes/ --readFilesIn ../temp_clipped/SRR3715268.fastq --outSAMunmapped Within --outFilterMultimapNmax 3 --outFilterMismatchNmax 2 --seedSearchStartLmax 6 --winAnchorMultimapNmax 10000 --alignEndsType Local --sjdbGTFtagExonParentTranscript transcript_id --runThreadN 16 --outFileNamePrefix SRR3715268_ --alignTranscriptsPerReadNmax 50000
+
+
 ```
+
 
 These are converted to bed files of format:
 
@@ -96,7 +103,17 @@ This is the correct format for duplicate collapsing.
 The commands for duplicate collapsing are generated:
 
 ```bash
-$ python clip-preprocess/write_commands_for_collapsing.py
+$ python ../pre/write_commands_for_collapsing.py -h
+usage: write_commands_for_collapsing.py [-h] [-i INPUT] [-o OUTPUT]
+
+USAGE: -i <input dir> -o <output dir>
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INPUT, --input INPUT
+                        Input bed folder.
+  -o OUTPUT, --output OUTPUT
+                        Output bed folder.
 ```
 
 The collapsed bed files then need their filenames translated from SRR* numbers:
@@ -158,7 +175,7 @@ Changed wd into each directory under individual_clip/ and generared auto.ini fil
 python cwt-peakcaller/generate_config_ini.py .
 ```
 
-Change min_rep_number to 3 (except, oo_fbf1).
+Change min_rep_number to 3 (except oo_fbf1 is 2).
 
 Call peaks.
 
@@ -174,6 +191,35 @@ This will create combined_filtered/ and combined_unfiltered/ directories from in
 ```bash
 python cliputil/filter.py -i individual_clip/
 # Outputs combined_unfiltered/.
+```
+This is not, however, the actual filtering step, it's just used to make the combined_unfiltered/ directory
+ from the individual CLIP peaks files.
+ Running the same script with a -f flag on -i combined_unfiltered/ does the actual filtering.
+ Before then we copy the CLIP data from the old 20° FBF CLIP datasets into the combined_unfiltered directory.
+ We used the 25° N2 samples as controls for the old 20° datasets, so all samples used the same negative.
+ This is mostly due to our greater confidence in the 25° N2 as representing the negative condition, vs
+ the older 20° N2 datasets. We then removed the dataset-size normalization adjustment for the peak calling
+ negative binomial, as this provided a slight improvement, but the post-normalization enrichment calculation 
+ and filtering is still done later at the filtering step.
+
+```bash
+# After calling individual replicates, run:
+python cliputil/filter.py -i individual_clip/
+# Outputs combined_unfiltered/.
+
+# Then copy into the same directory as the 25C FBF peaks.
+rsync low_temperature/combined_unfiltered/old_fbf* combined_unfiltered/
+
+# Replicates for FBF1 and FBF2 at 20C:
+#exp_bed1: ./bed_collapsed/exp_fbf1_TGGC.bed
+#exp_bed2: ./bed_collapsed/exp_fbf1_GGTT.bed
+#exp_bed3: ./bed_collapsed/exp_fbf1_CGGA.bed
+
+#exp_bed1: ./bed_collapsed/exp_fbf2_CGGA.bed
+#exp_bed2: ./bed_collapsed/exp_fbf2_GGTT.bed
+#exp_bed3: ./bed_collapsed/exp_fbf2_TGGC.bed
+
+
 ```
 
 Then:
@@ -191,15 +237,22 @@ Filtering
 Filter by the hardcoded ratios:
 ```bash
 python cliputil/filter.py -f -i combined_unfiltered/
+
+# Here are the cutoffs used:
+# (20C) Low temperature samples: 5-fold normalized, 20-fold unnormalized.
+# (25C) SP FBF-1, SP FBF-2, OO FBF-1 and OO FBF-2: 2-fold normalized, 10-fold unnormalized.
+# (25C) SP FBF: 5-fold normalized, 20-fold unnormalized (same as 20C samples).
+# (25C) OO FBF: 2.5-fold normalized, 20-fold unnormalzied.
 ```
 
 Final results:
 ```bash
-python cliputil/score_metrics.py -c auto.ini -p combined_filtered/
+python cwt-peakcaller/score_metrics.py -c auto.ini -p combined_filtered/
 ```
 
 Assigning to genes
 ---
+
 This creates the combined_counts.txt file and the counts/ directories that are used for 
 reads per gene analysis, including DESeq2.
 
@@ -237,7 +290,76 @@ CLIP datasets used:
 8. Sp. FBF
 9. 20 deg FBF
 
+Figure 1
+---
 
+Fig 1A-B Diagrams
+
+Figure 1C (% FBE in peaks) and 1E (# RNAs):
+cliputil/Figure1.ipynb
+
+Figure 1D HOMER motifs:
+
+```bash
+# Make fasta files:
+python ../cliputil/create_fasta.py 
+
+# Get motifs:
+export PATH=$PATH:/Users/dfporter/homer/bin/
+
+findMotifs.pl fasta/top500/old_fbf1.fa fasta fasta/homer/old_fbf1 -rna
+findMotifs.pl fasta/top500/old_fbf2.fa fasta fasta/homer/old_fbf2 -rna
+findMotifs.pl fasta/top500/oo_both.fa fasta fasta/homer/oo_both -rna
+findMotifs.pl fasta/top500/sp_both.fa fasta fasta/homer/sp_both -rna
+
+```
+HOMER's findmotifs.pl with only the -rna parameter. Figures output to the fasta/ directory.
+
+Figure 1F (Venn of 20 vs 25 OO target overlap):
+cliputil/vennMaker.py
+
+
+Figure 2
+---
+
+Figure 2A, Venn of SP vs OO:
+python cliputil/vennMaker.py
+
+Figure 2B, correlation of SP vs OO in reads/gene spearman rho:
+python cliputil/spearmanCorrelationsMaker.py
+
+Figure 2C-D, scatterplot/volcanoplot SP vs OO reads/gene:
+python ../cliputil/scatterplotMaker.py
+
+Figure 2E, phenotype enrichment:
+This requires the blocks to be defined first, which is done by running the scripts to
+ produce Figure 2A (heatmap2.py then define_blocks.py).
+ Then:
+ python cliputil/mineAnalysis.py
+
+Figure 2F, conservation:
+The conservation plots are made using the orthos/simplified.ipynb notebook.
+
+Figure 3
+---
+
+Figure 3A Heatmap:
+
+```bash
+python cliputil/heatmap2.py
+# This outputs File S5 Complex frequencies.xls
+
+# From the heatmap data, define blocks:
+python cliputil/define_blocks.py <input read counts xls file> <output xls filename>
+# Or run the script in the Figure3.ipynb.
+# The input is File S5 Complex frequencies.xls
+# The output file outputs File S6 Blocks.xls
+```
+
+Figure 3B Volcano with blocks added:
+```bash
+python cliputil/vennMaker.py
+```
 
 
 Supplementary tables
