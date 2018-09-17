@@ -21,7 +21,6 @@ class translator():
             self.name_to_biotype = dict(zip(gtf['gene_name'].tolist(), gtf['biotype'].tolist()))
 
 
-
 def overlaps_in_one_list(_list):
 
     def get_overlaps_if_exist(_list):

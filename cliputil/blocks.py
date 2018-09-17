@@ -11,3 +11,5 @@ blockii = set(ii_df['Gene name'].tolist()) - set([''])
 iii_df = pandas.read_excel(in_file, sheetname='Block III', index=False)
 blockiii = set(iii_df['Gene name'].tolist()) - set([''])
 
+iv_df = pandas.read_excel(in_file, sheetname='Block IV', index=False)
+blockiv = set(iv_df['Gene name'].tolist()) - set([''])

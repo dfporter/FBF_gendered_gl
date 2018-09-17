@@ -34,7 +34,7 @@ class scatterplotMaker(volcanoMaker.volcanoMaker):
             self, clip_fname='tables/6_reps_sp_vs_oo.txt',
             outfname='figs/Fig 2C Scatterplot.pdf'):
 
-        print("Making a scatterplot for {}".format(clip_fname))
+        print("Making a scatterplot for {}.".format(clip_fname))
 
         # Set self.gl_deseq as dict of (name -> row of deseq info), which calls
         # peaksList.read_sp_vs_oo() to load RNA-seq programs.
@@ -55,12 +55,17 @@ class scatterplotMaker(volcanoMaker.volcanoMaker):
         # Only keep genes with Ortiz germline RNA-seq data.
         clip_deseq = self.clipdf[self.clipdf['has_ortiz']]
 
+        print("Making a scatterplot using {} RNAs.".format(clip_deseq.shape[0]))
+
         #clip_deseq = clip_deseq[clip_deseq['baseMean']>=50]
         gl_deseq_vals = [id_to_gl_deseq_val(x, self.gl_deseq) \
                          for x in clip_deseq['gene_name'].tolist()]
+
         clip_deseq['gl_deseq'] = gl_deseq_vals
         cs = [self.id_to_color(x) for x in clip_deseq.gene_id]
+
         _y = clip_deseq['log2FoldChange'].tolist()
+
         pltclose()
         fig = plt.figure()
         ax = fig.add_subplot(111)
@@ -74,7 +79,7 @@ class scatterplotMaker(volcanoMaker.volcanoMaker):
         plt.plot([-20, 20], [0, 0], 'k:', alpha=0.5)
         
         plt.ylim([-10, 15])
-        plt.xlim([-10,15])
+        plt.xlim([-10, 15])
         plt.axes().set_aspect(1./plt.axes().get_data_ratio())
         #plt.axhline(y=0, linestyle='--', c='k', alpha=0.5)
         
@@ -94,9 +99,15 @@ class scatterplotMaker(volcanoMaker.volcanoMaker):
         pear_r, _ = scs.pearsonr(gl_deseq_vals, _y)
         spear_r, _ = scs.spearmanr(gl_deseq_vals, _y)
         
-        print("Correlation between CLIP and RNA abundance:")
+        print("Correlation between CLIP and RNA abundance log2 fold change vs log2 fold change:")
         print("\tPearson R {0}\n\tSpearman rho {1}".format(
             pear_r, spear_r))
+
+        pear_r, _ = scs.pearsonr([2**x for x in gl_deseq_vals], [2**x for x in _y])
+        spear_r, _ = scs.spearmanr([2**x for x in gl_deseq_vals], [2**x for x in _y])
+        print("Correlation between CLIP and RNA abundance nonlog fold change vs nonlog fold change:")
+        print("\tPearson R {}\n\tSpearman rho {}".format(pear_r, spear_r))
+        
         
         sig = clip_deseq[clip_deseq['padj']<0.05].copy()
         sp = sig[sig['log2FoldChange']>1].copy()
@@ -132,6 +143,7 @@ class scatterplotMaker(volcanoMaker.volcanoMaker):
             tups = list(zip(df['log2FoldChange'].tolist(), df['gl_deseq'].tolist()))
             return [(a - b) for a, b in tups]
         f, ax = plt.subplots(3, 2, figsize=(8, 12))
+
         # Oo.
         ax[0][0].hexbin(
             oo_deseq['RPKM in Oo. GL'].tolist(),
@@ -148,6 +160,7 @@ class scatterplotMaker(volcanoMaker.volcanoMaker):
             #color="#933b41", alpha=0.2
             )
         ax[0][1].axhline(y=0, linestyle='--', c='k', alpha=0.5)
+
         # Sp.
         ax[1][0].hexbin(
             sp_deseq['RPKM in Sp. GL'].tolist(),
@@ -164,6 +177,7 @@ class scatterplotMaker(volcanoMaker.volcanoMaker):
             #color="#933b41", alpha=0.2)
             )
         ax[1][1].axhline(y=0, linestyle='--', c='k', alpha=1)
+
         # Both.
         t = list(zip(both_deseq['RPKM in Sp. GL'].tolist(),
                 both_deseq['RPKM in Oo. GL'].tolist()))
@@ -196,6 +210,7 @@ fontsize=8)
             ax[i][1].set_xlabel(
 'FBF binding, log10 AU ' + ['(Oo. program)', 'Sp. program)', 'Oo. and Sp. program)'][i],
  fontsize=8)
+            
         plt.tight_layout()
         #Y47A7.2'
         plt.savefig('figs/Fig S2 Distance_to_45degree_by_abundance.pdf')

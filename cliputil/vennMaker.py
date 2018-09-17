@@ -190,8 +190,13 @@ class vennMaker(figureMaker.figureMaker, vennPainter, utils.translator):
             a, b = (kwargs['a'], kwargs['b'])
             
         print("---\n{0} RNAs were targets in SP or OO germlines.".format(len(a | b)))
-        print("Among those, {0} were OO only, {1} were SP only, and {2} were shared.\n".format(
-            len(a - b), len(b - a), len(a & b)))
+
+        num_total = len(a | b)
+
+        print("Among those, {} ({:.3}%) were OO only, {} ({:.3}%) were SP only, and {} ({:.3}%) were shared.\n".format(
+            len(a - b), 100* len(a - b)/num_total,
+            len(b - a), 100* len(b - a)/num_total,
+            len(a & b), 100* len(a & b)/num_total))
         
         if look_at_biotypes:
             mrna_a = set([name for name in a if self.biotypes.get(name, '') == 'protein_coding'])
@@ -227,6 +232,7 @@ class vennMaker(figureMaker.figureMaker, vennPainter, utils.translator):
         v = venn3([all_targ, sp_prog, oo_prog, ], ax=ax, set_labels=_lab)
         gl_rnas = set(programs.keys())
         #v = venn2([all_targ, oo_prog], ax=ax, set_labels=_lab)
+
         print("""There are {0} targets in SP or OO germlines. There are
  {1} RNAs in a SP or OO program. {2} ({3}%) of those are targets in the SP or
  OO FBF datasets.
@@ -234,6 +240,7 @@ class vennMaker(figureMaker.figureMaker, vennPainter, utils.translator):
             len(all_targ), len(programs), len(all_targ & gl_rnas),
             int(1000*len(all_targ & gl_rnas)/len(gl_rnas))/10.
             ))
+
         print("""only targ {0}. only oo prog {1} only sp prog {2}. 
  targ+oo {3} targ+sp {4} not targ but sp+oo {5}. targ+sp+oo {6}""".format(
         len(all_targ - oo_prog - sp_prog), len(oo_prog - all_targ -sp_prog),

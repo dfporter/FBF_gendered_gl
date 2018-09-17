@@ -31,7 +31,6 @@ def read_bed(bed_file):
     with open(bed_file, 'r') as f:
         for li in f:
             s = li.rstrip('\n').split('\t')
-            # num_reads = int(re.match('.*n=(\d+).*', li).groups()[0])
             yield (HTSeq.GenomicInterval(s[0], int(s[1]), int(s[2]), s[5]), 1)
 
 

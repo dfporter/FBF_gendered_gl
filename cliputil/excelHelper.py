@@ -122,21 +122,6 @@ class excelHelper():
                 continue
 
             f = re.sub('\.txt', '', os.path.basename(fname))
-
-            skip = """
-            f = re.sub('fbf', 'FBF', f)
-            f = re.sub('_', ' ', f)
-            f = re.sub('sp', 'SP', f)
-            f = re.sub('oo', 'OO', f)
-            f = re.sub('both', 'FBF', f)
-            f = re.sub('n2', 'N2 control', f)
-            if re.search('old', f) is not None:
-                f = re.sub('old', '20' + u'\xb0' + 'C', f)
-            elif re.search('SP', f):
-                f = '25' + u'\xb0' + 'C ' + f
-            elif re.search('OO', f):
-                f = '25' + u'\xb0' + 'C ' + f
-                """
             
             try:
                 dfs[f] = pandas.read_csv(fname, sep='\t')

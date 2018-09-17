@@ -130,6 +130,14 @@ BlockIII=[<
     column_name=Gene name
     >]
 
+BlockIV=[<
+    filename=/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/File S6 Blocks.xls
+    language=gene_name
+    species=worm
+    load_sheets_of_excel=True
+    sheetnames=Block IV
+    column_name=Gene name
+    >]
 #-----------
 
 Hafner=[<

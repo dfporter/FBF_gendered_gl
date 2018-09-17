@@ -1,11 +1,5 @@
-from __future__ import division
-import pandas
-import re
-import os
-import sys
-import glob
+import pandas, functools, re, os, sys, glob, collections
 import numpy as np
-import collections
 
 prefix = '/groups/Kimble/Common/fbf_celltype/combined_filtered/'
 prefix = './combined_filtered/'
@@ -59,6 +53,7 @@ class figureMaker():
         ]]
         self.targs[both] = set(self.df[both]['Gene name'].tolist())
         
+        self.all_targets_in_excel = functools.reduce(lambda x,y: x | y, self.targs.values())
         
     def load_peaks_csv_files(self, label_to_file=None):
         """Goes through combined_filtered/ peaks files and loads into self.df as dict.
@@ -95,4 +90,3 @@ class figureMaker():
     def read_csv(self, fname):
         return pandas.read_csv(fname, sep='\t', index_col=False)
 
-#    def n_gene_names(self, df):

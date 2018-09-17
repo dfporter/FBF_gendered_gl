@@ -239,10 +239,14 @@ Filter by the hardcoded ratios:
 python cliputil/filter.py -f -i combined_unfiltered/
 
 # Here are the cutoffs used:
-# (20C) Low temperature samples: 5-fold normalized, 20-fold unnormalized.
+# (20C) Low temperature FBF-1: 20-fold normalized, 50-fold unnormalized.
+# (20C) Low temperature FBF-2: 5-fold normalized, 20-fold unnormalized.
 # (25C) SP FBF-1, SP FBF-2, OO FBF-1 and OO FBF-2: 2-fold normalized, 10-fold unnormalized.
-# (25C) SP FBF: 5-fold normalized, 20-fold unnormalized (same as 20C samples).
+# (25C) SP FBF: 5-fold normalized, 20-fold unnormalized (same as 20C FBF-2).
 # (25C) OO FBF: 2.5-fold normalized, 20-fold unnormalzied.
+# As in the FBF CLIP RNA paper (Prasad et al.), the cutoffs were chosen by consideration of the
+# least enriched positive control RNA (known interactors, this strategy also used in the Kershner et al. FBF RIP-chip
+# paper), the enrichment of the binding site and the total number of interactors. 
 ```
 
 Final results:
@@ -257,9 +261,21 @@ This creates the combined_counts.txt file and the counts/ directories that are u
 reads per gene analysis, including DESeq2.
 
 ```bash
-python cliputil/assign_to_genes.py -c auto.ini --bed all_bed_collapsed/
+python cliputil/assign_to_genes.py -c auto.ini --bed bed_collapsed/
 ```
 
+DESeq2
+---
+
+DESeq2 output used by many subsequent scripts.
+Made with:
+```bash
+python cliputil/deseqMaker.py
+
+# Then run the R script given at the bottom of the deseqMaker.py file.
+
+
+```
 Analysis
 ======
 
@@ -340,6 +356,14 @@ This requires the blocks to be defined first, which is done by running the scrip
 Figure 2F, conservation:
 The conservation plots are made using the orthos/simplified.ipynb notebook.
 
+Data in text: 
+"average Spearman rho _ between 25° and 20° replicates" - cliputil/spearmanCorrelationsMaker.py
+"The revised 20° lists contain, respectively, _ of FBF-1 and FBF-2 targets reported previously" - cliputil/numbers_for_text.ipynb
+"_ of each paralog’s target list overlapped" - cliputil/numbers_for_text.ipynb
+"Peak heights for FBF-1 and FBF-2 were highly correlated (Pearson R _ )," - cliputil/create_excel.py
+"Among the 2114 total FBF targets, _ were mRNAs and..." - cliputil/biotypes.ipynb
+
+
 Figure 3
 ---
 
@@ -361,6 +385,8 @@ Figure 3B Volcano with blocks added:
 python cliputil/vennMaker.py
 ```
 
+Data in text:
+"FBF-RNA binding frequencies correlated well among spermatogenic replicates..." - cliputil/spearmanCorrelationsMaker.py
 
 Supplementary tables
 ---

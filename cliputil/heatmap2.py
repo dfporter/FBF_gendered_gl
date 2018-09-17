@@ -328,16 +328,16 @@ def make_fig(df):
     res.ax_heatmap.__dict__['figure'].set_figwidth(7)
     res.ax_heatmap.__dict__['figure'].set_figheight(10)
     #print res.ax_heatmap.__dict__['figure'].get_size_inches()
-    plt.savefig('figs/Fig 3 Genes vs sample heatmap.pdf', #pad_inches=4,
+    plt.savefig('../v2/figs/Fig 3 Genes vs sample heatmap.pdf', #pad_inches=4,
                 )#bbox_inches='tight')
     plt.clf(); plt.close()
     relab_dict = recover_label()
     ordered.columns = [relab_dict[x] for x in ordered.columns]
-    writer = pandas.ExcelWriter('tables/File S5 Complex frequencies.xls')
+    writer = pandas.ExcelWriter('../v2/tables/File S5 Complex frequencies.xls')
     ordered.to_excel(
         writer, sheet_name='log2 reads-per-gene', index=True)
     writer.save()
-    ordered.to_csv('tables/File S5 heatmap.txt', sep='\t', encoding='utf-8')
+    ordered.to_csv('../v2/tables/File S5 heatmap.txt', sep='\t', encoding='utf-8')
     #cl = res.dendrogram_col.linkage
     #col_clusters = scipy.cluster.hierarchy.fcluster(cl, 1)
     #res.dendrogram_col.label = col_clusters
@@ -599,8 +599,8 @@ class tableMaker(object):
             #    print k, v
         self.tabledf = pandas.DataFrame(table)
         print(self.tabledf)
-        self.tabledf.to_csv('tables/Table_1_block_stats.txt', sep='\t', index=False)
-        writer = pandas.ExcelWriter('tables/Table 1 block stats.xls')
+        self.tabledf.to_csv('../v2/tables/Table_1_block_stats.txt', sep='\t', index=False)
+        writer = pandas.ExcelWriter('../v2/tables/Table 1 block stats.xls')
         self.tabledf.to_excel(writer)
         writer.save()
 

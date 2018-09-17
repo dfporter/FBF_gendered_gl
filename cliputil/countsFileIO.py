@@ -158,6 +158,15 @@ class countsFileIO(countsColumnsNaming.countsColumnsNaming):
             self.counts_df = self.counts_df.loc[[
                 (x not in ['_no_feature', '_ambiguous']) for x in self.counts_df.index]]
         
+        elif style == 'including_25C_single_replicates':
+            is_rrna = [x for x in self.counts_df.gene if re.match('rrn-\d+.*', x)]
+            print("RNA genes: {0}\n{1}\n".format(len(is_rrna), is_rrna))
+
+            self.counts_df.set_index('gene', inplace=True)
+            self.counts_df.drop(is_rrna, inplace=True)
+            self.counts_df = self.to_reads_per_mil(self.counts_df)
+            self.shorten_names_and_subset_columns()
+           
         else:
             
             self.counts_df = self.counts_df[[x for x in self.counts_df.columns if (
@@ -233,7 +242,7 @@ class countsFileIO(countsColumnsNaming.countsColumnsNaming):
             #df['c_n2_1'].tolist()
             )
         
-        df['ave_neg'] = [np.sum(t)/3. for t in tups]
+        df['ave_neg'] = [np.sum(t)/2. for t in tups]
         
         df = subtract(('SP FBF_1', 'SP FBF_2', 'SP FBF_3'), 'ave_neg', df)
         df = subtract(('OO FBF_1', 'OO FBF_2', 'OO FBF_3'), 'ave_neg', df)

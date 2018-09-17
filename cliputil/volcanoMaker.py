@@ -6,10 +6,11 @@ import os, sys, glob, pandas, collections, random, matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import peaksList
-
+import figureMaker
 import scipy.stats as scs
 
-from blocks import blocki, blockii, blockiii
+from blocks import blocki, blockii, blockiii, blockiv
+
 #from cliputil import *
 
 
@@ -39,6 +40,15 @@ class volcanoMaker(peaksList.peaksList):
         self.wbid_to_name = dict(list(zip(
             df.gene_id, df.gene_name)))
     
+    def subset_to_targets(self):
+        fm = figureMaker.figureMaker()
+        fm.load_peaks_from_excel_file(excel_fname='tables/Table S1 Peaks.xls')
+
+        print('{} targets in excel file.'.format(len(fm.all_targets_in_excel)))
+        print(self.clipdf)
+        self.clipdf = self.clipdf[[(x in fm.all_targets_in_excel )for x in self.clipdf['gene_name']]]
+
+
     def read_counts_files(self, dirname='counts_6_reps/'):
         
         self.counts = {}
@@ -56,27 +66,22 @@ class volcanoMaker(peaksList.peaksList):
         for gene in self.combined_counts:
             self.combined_counts[gene] = self.combined_counts[gene]/len(self.counts)
 
-    def filter_read_counts(self, lower_cutoff_average=10):
+    def filter_read_counts(self, lower_cutoff_average=10, counts_dirname='counts_6_reps/'):
         
         if not(hasattr(self, 'combined_counts')):
-            self.read_counts_files()  # Filter by raw read count.
+            print("Loading files in {} to filter by raw read count.".format(counts_dirname))
+            self.read_counts_files(dirname=counts_dirname)  # Filter by raw read count.
             
         in_len = len(self.clipdf.index)
         
         above = [(self.combined_counts.get(x, 0)>=lower_cutoff_average) 
             for x in self.clipdf['gene_name'].tolist()]
         
-        def one_if_true(_):
-            if _: return 1
-            return 0
-        
-        print(("{0}/{1} genes in clipdf above {2} average raw counts.".format(
-            sum([one_if_true(n) for n in above]), len(self.clipdf.index), 
+        print(("{}/{} genes in clipdf above {} average raw counts.".format(
+            sum([1 for n in above if n]), len(self.clipdf.index), 
             lower_cutoff_average)))
         
         self.clipdf = self.clipdf[above].copy()
-        print(("Input clipdf len: {0} output {1}".format(
-            in_len, len(self.clipdf.index))))
     
     def translator(self):
         if os.path.exists('/opt/lib/name_wbid_map'): return True
@@ -126,6 +131,9 @@ class volcanoMaker(peaksList.peaksList):
         self.clipdf['Wormbase ID'] = self.clipdf['gene_id']
         self.clipdf['has_ortiz'] = [id_to_gl_deseq_val(x, self.gl_deseq)!=0 for \
                                x in self.clipdf['gene_name']]
+
+        print("Loaded DESeq2 data for {} RNAs from {}.".format(
+            self.clipdf.shape[0], fname))
         
     def read_clip_deseq_excel(self, fname):
 
@@ -142,6 +150,9 @@ class volcanoMaker(peaksList.peaksList):
         self.clipdf['Wormbase ID'] = self.clipdf['gene_id']
         self.clipdf['has_ortiz'] = [id_to_gl_deseq_val(x, self.gl_deseq)!=0 for \
                                x in self.clipdf['gene_name']]
+
+        print("Loaded DESeq2 data for {} RNAs from {}.".format(
+            self.clipdf.shape[0], fname))
 
     def fix_header(self, fname):
         l1r = ''
@@ -284,7 +295,7 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
               "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
         
         clip_deseq = self.clipdf[self.clipdf['has_ortiz']]
-        print('-------volcano_plot() self.clipdf.index = ', len(self.clipdf.index))
+        print('Making volcano plot using {} RNAs.'.format(len(self.clipdf.index)))
         
         cs = [self.id_to_color(x) for x in clip_deseq['gene_id'].tolist()]
         if temp_cf_settings:
@@ -337,16 +348,23 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
         plt.savefig(output_name)
         pltclose()
 
+        block_i_df = self.clipdf[[(name in blocki) for name in self.clipdf.gene_name]].copy()
+        block_ii_df = self.clipdf[[(name in blockii) for name in self.clipdf.gene_name]].copy()
+        block_iii_df = self.clipdf[[(name in blockiii) for name in self.clipdf.gene_name]].copy()
+        block_iv_df = self.clipdf[[(name in blockiv) for name in self.clipdf.gene_name]].copy()
+
+        dfs = {'I': block_i_df, 'II': block_ii_df, 'III': block_iii_df, 'IV': block_iv_df}
+
+        for name, df in dfs.items():
+            print(name, df['Program'].value_counts())
+
     def volcano_plot_blocks(
         self, xlabel='FBF spermatogenic/oogenic (log2)',
         output_name='figs/Fig 3A volcano blocks.pdf',
         reverse_x=False,
         ylim=(0, 50), xlim=(-7, 7)):
-        
-        
-        print(('(((())))\n' * 7))
 
-        all_blocks = blocki | blockii | blockiii
+        all_blocks = blocki | blockii | blockiii | blockiv
         
         colors = ["#75968f", "#a5bab7", "#c9d9d3", "#e2e2e2", "#dfccce",
               "#ddb7b1", "#cc7878", "#933b41", "#550b1d"]
@@ -356,7 +374,8 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
         block_i_df = df[[(name in blocki) for name in df.gene_name]].copy()
         block_ii_df = df[[(name in blockii) for name in df.gene_name]].copy()
         block_iii_df = df[[(name in blockiii) for name in df.gene_name]].copy()
-        
+        block_iv_df = df[[(name in blockiv) for name in df.gene_name]].copy()
+
         not_in_block_df = df[[(name not in all_blocks) for name in df.gene_name]].copy()
         pltclose()
 
@@ -402,8 +421,9 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
         s1 = add_plot(block_i_df, '#0087B9', 20, 0.5)
         s2 = add_plot(block_ii_df, 'green', 20, 0.25)
         s3 = add_plot(block_iii_df, 'purple', 20, 0.5)
-        
-        s1.set_lw(0); s2.set_lw(0); s3.set_lw(0);
+        s4 = add_plot(block_iv_df, 'pink', 20, 0.5)
+
+        s1.set_lw(0); s2.set_lw(0); s3.set_lw(0); s4.set_lw(0)
         
         to_label = ['sygl-1', 'lst-1', 'fog-1',  'fem-3', 'mpk-1',
                     ]#'linc-7', 'linc-29', 'linc-4']
@@ -513,11 +533,15 @@ def write_excel_of_deseq(df_in, header='SPvOO'):
         print(("Failed to parse this header argument: {0}".format(header)))
 
 
-def run():
+def run(only_targets=False):
     # Volcano plot for LT vs HT (20C vs 25C, oogenic).
     v = volcanoMaker()
     v.gl_rnaseq()
     v.read_clip_deseq_csv('tables/lt_fbf1_and_2_vs_ht_fbf_deseq.txt')
+
+    if only_targets:
+        v.subset_to_targets()
+
     v.filter_read_counts(lower_cutoff_average=20)
     v.read_sp_vs_oo_as_programs()
     write_excel_of_deseq(v.clipdf.copy(), header='HTvLT')
@@ -532,6 +556,10 @@ def run():
     v = volcanoMaker()
     v.gl_rnaseq()
     v.read_clip_deseq_csv('tables/6_reps_sp_vs_oo.txt')
+
+    if only_targets:
+        v.subset_to_targets()
+
     v.filter_read_counts(lower_cutoff_average=20)
     v.read_sp_vs_oo_as_programs()
     write_excel_of_deseq(v.clipdf.copy(), header='SPvOO')
@@ -545,7 +573,7 @@ def run():
 
 
 if __name__ == '__main__':
-    in_file = '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/tables/File S6 Blocks.xlsx'
+    in_file = '/Users/dfporter/Desktop/macbook_air_Desktop/shared/sp_oo/FBF_gendered_gl/v2/tables/File S6 Blocks.xlsx'
 
     #import programs_in_blocks 
-    run()
+    run(only_targets=0)
