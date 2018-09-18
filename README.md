@@ -119,7 +119,7 @@ $ python clip-preprocess/translate_filenames.py -i <input folder> -o <output fol
 ```
 
 Generation of “FBF” replicates for 25° datasets.
- 25° oogenic FBF-1/FBF-2 replicates in the order 1/3, 2/2, and 3/1; then concatenate 25° spermatogenic FBF-1/FBF-2 replicates in the order 2/1, 1/2, and 3/3.
+ 25° oogenic FBF-1/FBF-2 replicates in the order 1/1, 2/3, and 3/2; then concatenate 25° spermatogenic FBF-1/FBF-2 replicates in the order 2/2, 1/3, and 3/1.
 ```bash
 DN52egqo:individual_clip dfporter$ cat bed_collapsed/exp_fbf1_oo_1.bed bed_collapsed/exp_fbf2_oo_1.bed > bed_collapsed/exp_fbf_oo_1.bed
 DN52egqo:individual_clip dfporter$ cat bed_collapsed/exp_fbf1_oo_2.bed bed_collapsed/exp_fbf2_oo_3.bed > bed_collapsed/exp_fbf_oo_2.bed
