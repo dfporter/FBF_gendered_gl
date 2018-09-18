@@ -346,7 +346,8 @@ python ../cliputil/scatterplotMaker.py
 
 Figure 2E, phenotype enrichment:
 This requires the blocks to be defined first, which is done by running the scripts to
- produce Figure 2A (heatmap2.py then define_blocks.py).
+ produce Figure 3A (heatmap2.py then define_blocks.py).
+
  Then:
  python cliputil/mineAnalysis.py
 
@@ -397,21 +398,21 @@ python cliputil/create_excel.py
 python cliputil/create_excel.py
 
 # File S3 GO terms:
-# ipynb for formating:
-# cliputil/Convert IDs to WB ID for GO analysis on DAVID.ipynb
+python cliputil/mineAnalysis.py
 
 # File S4
 python cliputil/deseqMaker.py
 # Then run the R script given at the bottom of the .py file.
 
 # File S5 Complex frequencies
-python cliputil/heatmap.py
+python cliputil/heatmap2.py
 
 # File S6 Blocks
-# Selected from the appropriate range in File S5 by hand.
+python cliputil/heatmap2.py
+python cliputil/define_blocks.py
 
 # File S7 iPython notebook for conservation.
-# orthos/pum2_vs_fbf.ipynb
+# orthos/simple.ipynb
 ```
 
 
