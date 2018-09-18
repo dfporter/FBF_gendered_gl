@@ -3,9 +3,6 @@ Comparing FBF iCLIP in differnt cell types
 
 Code for a paper on FBF in the gendered transcriptome. 
 
-# Need to check bc usage for the N2s in old FBFs.
-# Need to check filtering numbers for everything and record.
-
 
 Data download
 ======
