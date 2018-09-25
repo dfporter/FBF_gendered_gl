@@ -153,6 +153,10 @@ def define_blocks(
     # GLD-1 goes in block III based on PCA, despite the heatmap.
     blockiii.append('gld-1')
 
+    for name, _set in zip(['I', 'II', 'III', 'IV'],
+        [blocki, blockii, blockiii, blockiv]):
+        print("{}: size {} RNAs.".format(name, len(_set)))
+
     dfi = pandas.DataFrame([{'Gene name': x} for x in blocki])
     dfii = pandas.DataFrame([{'Gene name': x} for x in blockii])
     dfiii = pandas.DataFrame([{'Gene name': x} for x in blockiii])
@@ -167,7 +171,7 @@ def define_blocks(
     helper = excelHelper.excelHelper()
     
     for df in [dfi, dfii, dfiii, dfiv]:
-        #helper.add_gene_description(df)
+        helper.add_gene_description(df)
 
         if 'transcript_id' in df.columns:
             del df['transcript_id']

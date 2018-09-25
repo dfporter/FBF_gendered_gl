@@ -296,6 +296,12 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
         
         clip_deseq = self.clipdf[self.clipdf['has_ortiz']]
         print('Making volcano plot using {} RNAs.'.format(len(self.clipdf.index)))
+
+        most_dif = clip_deseq.sort_values(by=['padj'], ascending=True, inplace=False)
+        most_dif_oo = most_dif[most_dif['log2FoldChange']>0]
+        most_dif_sp = most_dif[most_dif['log2FoldChange']<0]
+        print(most_dif_oo.head(1))
+        print(most_dif_sp.head(1))
         
         cs = [self.id_to_color(x) for x in clip_deseq['gene_id'].tolist()]
         if temp_cf_settings:
@@ -457,7 +463,7 @@ as_p(oo_enriched_sig[oo_enriched_sig['Program']=='Oogenic only'], len(oo_enriche
 def pltclose():
     plt.clf()
     plt.close()
-#cf = pandas.read_csv(, sep='\t')
+
 
 def write_excel_of_deseq(df_in, header='SPvOO'):
     
@@ -467,8 +473,6 @@ def write_excel_of_deseq(df_in, header='SPvOO'):
     print('-------write_excel_of_deseq() has_ortiz clipdf.index = ', len(df.index))
     df = df[['gene_name','Wormbase ID', 'log2FoldChange', 
                 'pvalue', 'padj', 'Program']]
-    
-
     
     def by_pval(_df, pval):
         df_s = _df[_df['BH-corrected p value']<pval].copy()

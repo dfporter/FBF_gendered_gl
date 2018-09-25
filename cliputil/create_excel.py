@@ -146,6 +146,7 @@ def correlations_in_peak_regions(dfs):
 
     print("...Finished determining correlations in peak height in peak regions.")
 
+
 if __name__ == '__main__':
 
     helper = excelHelper.excelHelper()
@@ -316,7 +317,7 @@ if __name__ == '__main__':
             return 0
 
 
-    res = []#collections.defaultdict(dict)#pandas.Dataframe()
+    res = []
 
     for f in dfs:
         top = dfs[f][dfs[f]['Rank']<501].copy()
@@ -335,6 +336,51 @@ if __name__ == '__main__':
     order = first + [x for x in res.columns if x not in first]
     res = res[order]
 
+    ########
+    # S2: Cutoffs.
+    # Here are the cutoffs used:
+    # (20C) Low temperature FBF-1: 20-fold normalized, 50-fold unnormalized.
+    # (20C) Low temperature FBF-2: 5-fold normalized, 20-fold unnormalized.
+    # (25C) SP FBF-1, SP FBF-2, OO FBF-1 and OO FBF-2: 2-fold normalized, 10-fold unnormalized.
+    # (25C) SP FBF: 5-fold normalized, 20-fold unnormalized (same as 20C FBF-2).
+    # (25C) OO FBF: 2.5-fold normalized, 20-fold unnormalzied.
+    # As in the FBF CLIP RNA paper (Prasad et al.), the cutoffs were chosen by consideration of the
+    # least enriched positive control RNA (known interactors, this strategy also used in the Kershner et al. FBF RIP-chip
+    # paper), the enrichment of the binding site and the total number of interactors. 
+
+    cutoffs_df = pandas.DataFrame([
+
+                {'Dataset': 'OO FBF-1 (25' + u'\xb0' + u')',
+        'Enrichment over control reads/million cutoff (fold)': 2,
+        'Enrichment over control reads (absolute number) cutoff (fold)': 10,},
+                {'Dataset': 'OO FBF-2 (25' + u'\xb0' + u')',
+        'Enrichment over control reads/million cutoff (fold)': 2,
+        'Enrichment over control reads (absolute number) cutoff (fold)': 10,},
+                {'Dataset': 'SP FBF-1 (25' + u'\xb0' + u')',
+        'Enrichment over control reads/million cutoff (fold)': 2,
+        'Enrichment over control reads (absolute number) cutoff (fold)': 10,},
+                {'Dataset': 'SP FBF-2 (25' + u'\xb0' + u')',
+        'Enrichment over control reads/million cutoff (fold)': 2,
+        'Enrichment over control reads (absolute number) cutoff (fold)': 10,},
+                {'Dataset': 'OO FBF (25' + u'\xb0' + u')',
+        'Enrichment over control reads/million cutoff (fold)': 2.5,
+        'Enrichment over control reads (absolute number) cutoff (fold)': 20,},
+                {'Dataset': 'SP FBF (25' + u'\xb0' + u')',
+        'Enrichment over control reads/million cutoff (fold)': 5,
+        'Enrichment over control reads (absolute number) cutoff (fold)': 10,},
+                {'Dataset': 'OO FBF-1 (20' + u'\xb0' + u')',
+        'Enrichment over control reads/million cutoff (fold)': 20,
+        'Enrichment over control reads (absolute number) cutoff (fold)': 50,},
+                {'Dataset': 'OO FBF-2 (20' + u'\xb0' + u')',
+        'Enrichment over control reads/million cutoff (fold)': 5,
+        'Enrichment over control reads (absolute number) cutoff (fold)': 20,},
+
+        ])
+
+    cutoffs_df.index = cutoffs_df['Dataset']
+
+    ########
+    # S2: Write to excel file.
     index_order = [
     'exp_fbf1_CGGA',
     'exp_fbf1_GGTT',
@@ -363,6 +409,7 @@ if __name__ == '__main__':
     'control_oo_lane1_rt15',
     'control_oo_lane1_rt16',
     'control_oo_lane1_rt3']
+
     index_to_exp = {
     'exp_fbf1_CGGA': u'oo FBF-1 (20' + u'\xb0' + u') barcode CGGA',
     'exp_fbf1_GGTT': u'oo FBF-1 (20' + u'\xb0' + u') barcode GGTT',
@@ -391,14 +438,52 @@ if __name__ == '__main__':
     'control_oo_lane1_rt15':u'control for oo FBF (25' + u'\xb0' + u') rep 1',
     'control_oo_lane1_rt16': u'control for oo FBF (25' + u'\xb0' + u') rep 2',
     'control_oo_lane1_rt3': u'control for oo FBF (25' + u'\xb0' + u') rep 3',
+
+    'control_oo': 'Discard combined control oo',
+    'control_oo_1': u'Control for oo FBF (25' + u'\xb0' + u') rep 1',
+    'control_oo_2': u'Control for oo FBF (25' + u'\xb0' + u') rep 2',
+    'control_oo_3': u'Control for oo FBF (25' + u'\xb0' + u') rep 3',
+    'control_sp': 'Discard combined control sp',
+    'control_sp_1': u'Control for sp FBF (25' + u'\xb0' + u') rep 1',
+    'control_sp_2': u'Control for sp FBF (25' + u'\xb0' + u') rep 1',
+    'control_sp_3': u'Control for sp FBF (25' + u'\xb0' + u') rep 1',
+    'exp_fbf1_CGGA': u'OO FBF-1 (20' + u'\xb0' + u') rep 3',
+    'exp_fbf1_GGTT': u'OO FBF-1 (20' + u'\xb0' + u') rep 2',
+    'exp_fbf1_TGGC': u'OO FBF-1 (20' + u'\xb0' + u') rep 1',
+    'exp_fbf1_oo_1': u'OO FBF-1 (25' + u'\xb0' + u') rep 1',
+    'exp_fbf1_oo_2': u'OO FBF-1 (25' + u'\xb0' + u') rep 2',
+    'exp_fbf1_oo_3': u'OO FBF-1 (25' + u'\xb0' + u') rep 3',
+    'exp_fbf1_sp_1': u'SP FBF-1 (25' + u'\xb0' + u') rep 1',
+    'exp_fbf1_sp_2': u'SP FBF-1 (25' + u'\xb0' + u') rep 2',
+    'exp_fbf1_sp_3': u'SP FBF-1 (25' + u'\xb0' + u') rep 3',
+    'exp_fbf2_CGGA': u'OO FBF-2 (20' + u'\xb0' + u') rep 1',
+    'exp_fbf2_GGTT': u'OO FBF-2 (20' + u'\xb0' + u') rep 2',
+    'exp_fbf2_TGGC': u'OO FBF-2 (20' + u'\xb0' + u') rep 3',
+    'exp_fbf2_oo_1': u'OO FBF-2 (25' + u'\xb0' + u') rep 1',
+    'exp_fbf2_oo_2': u'OO FBF-2 (25' + u'\xb0' + u') rep 2',
+    'exp_fbf2_oo_3': u'OO FBF-2 (25' + u'\xb0' + u') rep 3',
+    'exp_fbf2_sp_1': u'SP FBF-2 (25' + u'\xb0' + u') rep 1',
+    'exp_fbf2_sp_2': u'SP FBF-2 (25' + u'\xb0' + u') rep 2',
+    'exp_fbf2_sp_3': u'SP FBF-2 (25' + u'\xb0' + u') rep 3',
+    'exp_fbf_oo_1': u'OO FBF (25' + u'\xb0' + u') rep 1',
+    'exp_fbf_oo_2': u'OO FBF (25' + u'\xb0' + u') rep 2',
+    'exp_fbf_oo_3': u'OO FBF (25' + u'\xb0' + u') rep 3',
+    'exp_fbf_sp_1': u'SP FBF (25' + u'\xb0' + u') rep 1',
+    'exp_fbf_sp_2': u'SP FBF (25' + u'\xb0' + u') rep 2',
+    'exp_fbf_sp_3': u'SP FBF (25' + u'\xb0' + u') rep 3',
     }
 
     #reads = reads[[(x in index_order) for x in reads['Sample'].tolist()]]
 
-    #reads['Sample'] = [index_to_exp[x] for x in reads['Sample']]
+    reads['Sample'] = [index_to_exp.get(x, x) for x in reads['Sample']]
+
+    discard = [index_to_exp.get(x, x) for x in index_to_exp if re.search('[Dd]iscard', index_to_exp.get(x, x))]
+
+    print("Discarding {}".format(discard))
+    reads = reads[[(x not in discard) for x in reads.Sample]].copy()
     
     print("Outputing:\n{}".format(reads))
-    writer = pandas.ExcelWriter('tables/Table S2 Peak stats.xls')
+    writer = pandas.ExcelWriter('tables/File S2 Peak stats.xlsx', engine='xlsxwriter')
 
     res.to_excel(
             writer, sheet_name="Peak stats", index=False)
@@ -412,5 +497,36 @@ if __name__ == '__main__':
     #    'tables/correlations_fbf1_and_fbf2.txt', sep='\t',
     #    index_col=False)
     #corrs.to_excel(writer, sheet_name='Corr FBF-1 v -2', index=False)
+    cutoffs_df.to_excel(writer, sheet_name='Enrich. cutoffs for peaks')
+
+    #########
+    # Column formatting. (After writing all sheets.)
+    # Get the xlsxwriter workbook and worksheet objects.
+    workbook  = writer.book
+    worksheet_stats = writer.sheets['Peak stats']
+    worksheet_counts = writer.sheets['Unique read counts']
+    worksheet_cutoffs = writer.sheets['Enrich. cutoffs for peaks']
+    # Add some cell formats.
+    format_commas = workbook.add_format({'num_format': '#,##0'})
+    format_commas.set_align('right')
+    #format2 = workbook.add_format({'num_format': '0%'})
+
+    format = workbook.add_format()
+    format.set_align('center')
+
+    #format.set_align('vcenter')
+    # Note: It isn't possible to format any cells that already have a format such
+    # as the index or headers or any cells that contain dates or datetimes.
+
+    # Set the column width and format.
+    worksheet_stats.set_column('A:G', 22, format)
+    worksheet_counts.set_column('A:B', 22, format_commas)
+    worksheet_cutoffs.set_column('A:A', 20, format)
+    worksheet_cutoffs.set_column('B:D', 30, format)
+
+    # Set the format but not the column width.
+    #worksheet.set_column('C:C', None, format2)
+
+
     writer.save()
 
