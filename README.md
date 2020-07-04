@@ -1,4 +1,4 @@
-Comparing FBF iCLIP in differnt cell types
+Comparing FBF iCLIP in different cell types
 ======
 
 Code for a paper on FBF in the gendered transcriptome. 
